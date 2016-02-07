@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using System;
 using System.Collections.Generic;
 
 namespace MonoGame3DKezumieParticles
@@ -36,14 +37,19 @@ namespace MonoGame3DKezumieParticles
             IsMouseVisible = true;
             
             particles = new List<Particle>();
-            Particle p = new Particle(5, new Vector3(0f,0f,0f));
-            particles.Add(p);
 
-            viewMatrix = Matrix.CreateLookAt(new Vector3(0, 0, 100), Vector3.Zero, Vector3.Up);
+            for (int i = 0; i < 10000; i++)
+            {
+                particles.Add(new Particle(5, new Vector3(0f, 0f, 0f)));
+            }           
+           
+           
+
+            viewMatrix = Matrix.CreateLookAt(new Vector3(0, 0, 200), Vector3.Zero, Vector3.Up);
             projectionMatrix = Matrix.CreatePerspectiveFieldOfView(MathHelper.PiOver4,
                  graphics.PreferredBackBufferWidth /
                 (float)graphics.PreferredBackBufferHeight,
-                1.5f, 200);
+                1f, 500);
             worldMatrix = Matrix.CreateWorld(new Vector3(0f, 0f, 0f), new Vector3(0, 0, -1), Vector3.Up);
         }
 
@@ -55,11 +61,16 @@ namespace MonoGame3DKezumieParticles
         /// </summary>
         protected override void Initialize()
         {
+            Random rnd = new Random();
             // TODO: Add your initialization logic here
             foreach (var item in particles)
             {
-                item.EndPosition = new Vector3(23,23,23);
-                item.Size = 2;
+                //Диапазон координат от -3 до 3
+                float x = (float)(rnd.NextDouble() - rnd.NextDouble()) * 40;
+                float y = (float)(rnd.NextDouble() - rnd.NextDouble()) * 40;
+                float z = (float)(rnd.NextDouble() - rnd.NextDouble()) * 40;
+                item.EndPosition = new Vector3(x,y,z);
+                item.Size = 1;
                 item.Init();
             }
             base.Initialize();
@@ -73,7 +84,8 @@ namespace MonoGame3DKezumieParticles
         {
             // Create a new SpriteBatch, which can be used to draw textures.
             spriteBatch = new SpriteBatch(GraphicsDevice);
-            effect = new BasicEffect(GraphicsDevice);
+            effect = new BasicEffect(graphics.GraphicsDevice);
+           // InitializeEffect();
             font = Content.Load<SpriteFont>("font");
             // TODO: use this.Content to load your game content here
         }
@@ -112,7 +124,7 @@ namespace MonoGame3DKezumieParticles
         protected override void Draw(GameTime gameTime)
         {
 
-            graphics.GraphicsDevice.Clear(Color.Black);
+            graphics.GraphicsDevice.Clear(Color.Black);            
             graphics.GraphicsDevice.BlendState = BlendState.Opaque;
             graphics.GraphicsDevice.RasterizerState = RasterizerState.CullNone;
             graphics.GraphicsDevice.DepthStencilState = DepthStencilState.Default;
@@ -126,7 +138,7 @@ namespace MonoGame3DKezumieParticles
             effect.Projection = projectionMatrix;
             foreach (var item in particles)
             {
-                effect.World = Matrix.CreateTranslation(item.Position)*worldMatrix;
+                
                 foreach (EffectPass pass in effect.CurrentTechnique.Passes)
                 {
                     pass.Apply();
@@ -137,6 +149,60 @@ namespace MonoGame3DKezumieParticles
             spriteBatch.DrawString(font, "For Nami by Victorem", new Vector2(5, 5), Color.White);
             spriteBatch.End();
             base.Draw(gameTime);
+        }
+
+        /// <summary>
+        /// Инициализация базовых эффектов (настроек параметров и способов обработки)
+        /// используемых для работы с трехмерной моделью
+        /// </summary>
+        private void InitializeEffect()
+        {
+            //Создание объекта для вывода изображений
+            effect = new BasicEffect(graphics.GraphicsDevice);
+            //Установка матриц
+            effect.World = worldMatrix;
+            effect.View = viewMatrix;
+            effect.Projection = projectionMatrix;
+
+            // Цвета различных видов освещения
+            effect.AmbientLightColor = new Vector3(0.1f, 0.1f, 0.1f);
+            effect.DiffuseColor = new Vector3(1.0f, 1.0f, 1.0f);
+            effect.SpecularColor = new Vector3(0.25f, 0.25f, 0.25f);
+            effect.SpecularPower = 5.0f;
+            effect.Alpha = 1.0f;
+            //Включим освещение
+            effect.LightingEnabled = true;
+            if (effect.LightingEnabled)
+            {
+                effect.DirectionalLight0.Enabled = true; // активируем каждый источник света отдельно
+                if (effect.DirectionalLight0.Enabled)
+                {
+                    // Направление по Х
+                    effect.DirectionalLight0.DiffuseColor = new Vector3(1, 0, 0); // диапазон от 0 до 1
+                    effect.DirectionalLight0.Direction = Vector3.Normalize(new Vector3(-1, 0, 0));
+                    // Направление от источника света к началу координат сцены
+                    effect.DirectionalLight0.SpecularColor = Vector3.One;
+                }
+
+                effect.DirectionalLight1.Enabled = true;
+                if (effect.DirectionalLight1.Enabled)
+                {
+                    // Направление по У
+                    effect.DirectionalLight1.DiffuseColor = new Vector3(0, 0.75f, 0);
+                    effect.DirectionalLight1.Direction = Vector3.Normalize(new Vector3(0, -1, 0));
+                    effect.DirectionalLight1.SpecularColor = Vector3.One;
+                }
+
+                effect.DirectionalLight2.Enabled = true;
+                if (effect.DirectionalLight2.Enabled)
+                {
+                    // Направление по Z
+                    effect.DirectionalLight2.DiffuseColor = new Vector3(0, 0, 0.5f);
+                    effect.DirectionalLight2.Direction = Vector3.Normalize(new Vector3(0, 0, -1));
+                    effect.DirectionalLight2.SpecularColor = Vector3.One;
+                }
+            }
+
         }
     }
 }

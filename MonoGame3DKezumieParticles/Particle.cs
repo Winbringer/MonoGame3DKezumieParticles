@@ -10,7 +10,7 @@ namespace MonoGame3DKezumieParticles
     class Particle
     {
         Vector3 Velocity;
-       public Vector3 Position;
+        public Vector3 Position;
         float deformation;
         float step;
         float Speed;
@@ -18,7 +18,7 @@ namespace MonoGame3DKezumieParticles
         public VertexPositionColor[] vertex;
         public Color Color;
         public Vector3 StartPosition;
-        public Vector3 EndPosition;   
+        public Vector3 EndPosition;
         public float Size { get; set; }
         int MinIndex = 1;
 
@@ -37,10 +37,10 @@ namespace MonoGame3DKezumieParticles
             Position = StartPosition;
             deformation = 1;
             step = 0.01f;
-            isMoving = true;                        
+            isMoving = true;
             vertex = new VertexPositionColor[12];
-           
-         
+
+
 
             float X = StartPosition.X;
             float Y = StartPosition.Y;
@@ -78,20 +78,34 @@ namespace MonoGame3DKezumieParticles
             deformation += step;
             if (deformation < 1) { step *= -1; deformation = 1; }
             if (deformation > 2) { step *= -1; deformation = 2; }
-            float mult2 = (float)Math.Sqrt(deformation)*2;
+            float mult2 = (float)Math.Sqrt(deformation) * 2;
 
             Position.X += (float)(Velocity.X * mult);
-            Position.Y += (float)(Velocity.Y * mult*mult2);
+            Position.Y += (float)(Velocity.Y * mult * mult2);
             Position.Z += (float)(Velocity.Z * mult);
-            
-
-
-
-
-            if (Math.Abs((EndPosition.X - Position.X)) <  Math.Abs(0.01)) Position.X = EndPosition.X;
+            if (Math.Abs((EndPosition.X - Position.X)) < Math.Abs(0.01)) Position.X = EndPosition.X;
             if (Math.Abs((EndPosition.Y - Position.Y)) < Math.Abs(0.01)) Position.Y = EndPosition.Y;
             if (Math.Abs((EndPosition.Z - Position.Z)) < Math.Abs(0.01)) Position.Z = EndPosition.Z;
+            vertex[0].Position = Position;
 
+            float X = Position.X;
+            float Y = Position.Y;
+            float Z = Position.Z;
+
+            vertex[1].Position = new Vector3(X + Size, Y + Size / 6, Z + Size / 6);
+            vertex[2].Position = new Vector3(X + Size / 6, Y + Size, Z + Size / 6);
+
+            vertex[3].Position = new Vector3(X + 0, Y + 0, Z + 0);
+            vertex[4].Position = new Vector3(X + Size, Y + Size / 6, Z + Size / 6);
+            vertex[5].Position = new Vector3(X + Size / 6, Y + Size / 6, Z + Size);
+
+            vertex[6].Position = new Vector3(X + 0, Y + 0, Z + 0);
+            vertex[7].Position = new Vector3(X + Size / 6, Y + Size / 6, Z + Size);
+            vertex[8].Position = new Vector3(X + Size / 6, Y + Size, Z + Size / 6);
+
+            vertex[9].Position = new Vector3(X + Size / 6, Y + Size / 6, Z + Size);
+            vertex[10].Position = new Vector3(X + Size, Y + Size / 6, Z + Size / 6);
+            vertex[11].Position = new Vector3(X + Size / 6, Y + Size, Z + Size / 6);
         }
 
     }
