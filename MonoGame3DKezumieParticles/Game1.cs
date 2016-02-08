@@ -27,11 +27,8 @@ namespace MonoGame3DKezumieParticles
         SpriteFont font;
         int c;
         double t;
-        string s;
-        // A vertex buffer holding our particles. This contains the same data as
-        // the particles array, but copied across to where the GPU can access it.
-        DynamicVertexBuffer vertexBuffer;
-        // Index buffer turns sets of four vertices into particle quads (pairs of triangles).
+        string s;       
+        DynamicVertexBuffer vertexBuffer;       
         IndexBuffer indexBuffer;
         private int[] indices;
 
@@ -45,17 +42,9 @@ namespace MonoGame3DKezumieParticles
             Window.Title = "Kezumie";
             IsMouseVisible = true;
 
-            //vertexBuffer = new DynamicVertexBuffer(GraphicsDevice, size, BufferUsage.Points);
-            //vertexBuffer. += new EventHandler(vertexBuffer_ContentLost);
-            //vertexBuffer.SetData(particles);
-            //vertexBuffer.SetData(firstNewParticle * stride * 4, particles,
-            //                        firstNewParticle * 4,
-            //                        (firstFreeParticle - firstNewParticle) * 4,
-            //                        stride, SetDataOptions.NoOverwrite);
-
             this.ColorMy = new Color[] { new Color(0, 255, 0, 255), Color.Red, Color.Blue };
 
-            particles = new Particle[100000];
+            particles = new Particle[1000000];
 
             viewMatrix = Matrix.CreateLookAt(new Vector3(0, 0, 200), Vector3.Zero, Vector3.Up);
             projectionMatrix = Matrix.CreatePerspectiveFieldOfView(MathHelper.PiOver4,
@@ -86,7 +75,7 @@ namespace MonoGame3DKezumieParticles
                 float x = (float)(R * Math.Sin(MathHelper.ToRadians(sin)) * Math.Cos(MathHelper.ToRadians(cos)));
                 float y = (float)(R * Math.Sin(MathHelper.ToRadians(sin)) * Math.Sin(MathHelper.ToRadians(cos)));
                 float z = (float)(R * Math.Cos(MathHelper.ToRadians(sin)));
-                particles[i] = new Particle(10, new Vector3(0f, 0f, 0f), graphics)
+                particles[i] = new Particle(10, new Vector3(0f, 0f, 0f))
                 {
                     EndPosition = new Vector3(x, y, z),
                     Size =1f,
@@ -204,8 +193,7 @@ namespace MonoGame3DKezumieParticles
 
             effect.World = worldMatrix;
             effect.View = viewMatrix;
-            effect.Projection = projectionMatrix;
-            graphics.GraphicsDevice.SetVertexBuffer(null);
+            effect.Projection = projectionMatrix;           
             graphics.GraphicsDevice.SetVertexBuffer(vertexBuffer);
             graphics.GraphicsDevice.Indices = indexBuffer;
 
@@ -214,11 +202,7 @@ namespace MonoGame3DKezumieParticles
                 pass.Apply();
                 graphics.GraphicsDevice.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0,
                                                          0, vertex.Length,
-                                                         0, vertex.Length / 4);
-                //for (int i = 0; i < particles.Length; i++)
-                //{
-                //    particles[i].Draw();
-                //}
+                                                         0, vertex.Length / 4);              
             }
 
             spriteBatch.Begin();
