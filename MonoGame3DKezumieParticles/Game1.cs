@@ -14,10 +14,8 @@ namespace MonoGame3DKezumieParticles
         GraphicsDeviceManager graphics;
         SpriteBatch spriteBatch;
         BasicEffect effect;
-        VertexBuffer vertexBuffer;
 
         List<Particle> particles;
-
         Matrix projectionMatrix;
         Matrix viewMatrix;
         Matrix worldMatrix;
@@ -40,9 +38,9 @@ namespace MonoGame3DKezumieParticles
             
             particles = new List<Particle>();
 
-            for (int i = 0; i < 100000; i++)
+            for (int i = 0; i < 10000; i++)
             {
-                particles.Add(new Particle(5, new Vector3(0f, 0f, 0f)));
+                particles.Add(new Particle(10, new Vector3(0f, 0f, 0f)));
             }
             Vertex = new VertexPositionColor[particles.Count * 12];
            
@@ -65,17 +63,16 @@ namespace MonoGame3DKezumieParticles
         {
             int i = 0;
             // TODO: Add your initialization logic here
-            graphics.GraphicsDevice.Flush();
-            vertexBuffer = new VertexBuffer(graphics.GraphicsDevice, typeof(VertexPositionColor), particles.Count * 12, BufferUsage.WriteOnly);
+           
             foreach (var item in particles)
             {
                 ++i;
                 Random rnd = new Random(i);
-                //Диапазон координат от -3 до 3
+                //Диапазон координат от -40 до 40
                 //float x = (float)(rnd.NextDouble() - rnd.NextDouble()) * 40;
                 //float y = (float)(rnd.NextDouble() - rnd.NextDouble()) * 40;
                 //float z = (float)(rnd.NextDouble() - rnd.NextDouble()) * 40;
-                double R = rnd.NextDouble() * 50; 
+                double R = rnd.NextDouble() * 40; 
                 float sin = (float)(rnd.NextDouble() * 180);
                 float cos = (float)(rnd.NextDouble() * 360);
                 float x = (float)(R * Math.Sin(MathHelper.ToRadians(sin)) * Math.Cos(MathHelper.ToRadians(cos)));
@@ -131,11 +128,11 @@ namespace MonoGame3DKezumieParticles
             {
                if(item.isMoving) item.Move(gameTime);
                 
-                   item.vertex.CopyTo(Vertex, j);
-                j += 12;            
+                //   item.vertex.CopyTo(Vertex, j);
+                //j += 12;            
                 
             }
-            vertexBuffer.SetData<VertexPositionColor>(Vertex);
+         
             base.Update(gameTime);
         }
 
@@ -150,9 +147,7 @@ namespace MonoGame3DKezumieParticles
             graphics.GraphicsDevice.BlendState = BlendState.Opaque;
             graphics.GraphicsDevice.RasterizerState = RasterizerState.CullNone;
             graphics.GraphicsDevice.DepthStencilState = DepthStencilState.Default;
-            graphics.GraphicsDevice.SamplerStates[0] = SamplerState.LinearWrap;
-            graphics.GraphicsDevice.SetVertexBuffer(null);
-            graphics.GraphicsDevice.SetVertexBuffer(vertexBuffer);
+            graphics.GraphicsDevice.SamplerStates[0] = SamplerState.LinearWrap;       
 
             // TODO: Add your drawing code here
 
@@ -164,12 +159,18 @@ namespace MonoGame3DKezumieParticles
                 foreach (EffectPass pass in effect.CurrentTechnique.Passes)
                 {
                     pass.Apply();
-                    graphics.GraphicsDevice.DrawPrimitives(PrimitiveType.TriangleList,0,particles.Count/4);
+                foreach (var item in particles)
+                {
+                    
+                   // graphics.GraphicsDevice.DrawUserPrimitives(PrimitiveType.TriangleList, item.vertex, 0, 4);
+                    graphics.GraphicsDevice.DrawUserIndexedPrimitives(PrimitiveType.TriangleList, item.vertex, 0, item.vertex.Length, item.indexes, 0, 4);
+                }
                 }
            
             spriteBatch.Begin();
             spriteBatch.DrawString(font, "For Nami by Victorem", new Vector2(5, 5), Color.White);
             spriteBatch.End();
+            GraphicsDevice.DepthStencilState = DepthStencilState.Default;
             base.Draw(gameTime);
         }
 
