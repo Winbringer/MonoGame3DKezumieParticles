@@ -14,7 +14,7 @@ namespace MonoGame3DKezumieParticles
         GraphicsDeviceManager graphics;
         SpriteBatch spriteBatch;
         BasicEffect effect;
-      //  VertexBuffer vertexBuffer;
+        VertexBuffer vertexBuffer;
 
         List<Particle> particles;
 
@@ -22,6 +22,8 @@ namespace MonoGame3DKezumieParticles
         Matrix viewMatrix;
         Matrix worldMatrix;
         Matrix rotationMatrix = Matrix.Identity;
+
+        VertexPositionColor[] Vertex;
         float cameraDistance;
         SpriteFont font;
 
@@ -38,11 +40,11 @@ namespace MonoGame3DKezumieParticles
             
             particles = new List<Particle>();
 
-            for (int i = 0; i < 10000; i++)
+            for (int i = 0; i < 100000; i++)
             {
                 particles.Add(new Particle(5, new Vector3(0f, 0f, 0f)));
-            }           
-           
+            }
+            Vertex = new VertexPositionColor[particles.Count * 12];
            
 
             viewMatrix = Matrix.CreateLookAt(new Vector3(0, 0, 200), Vector3.Zero, Vector3.Up);
@@ -61,18 +63,32 @@ namespace MonoGame3DKezumieParticles
         /// </summary>
         protected override void Initialize()
         {
-            Random rnd = new Random();
+            int i = 0;
             // TODO: Add your initialization logic here
+            graphics.GraphicsDevice.Flush();
+            vertexBuffer = new VertexBuffer(graphics.GraphicsDevice, typeof(VertexPositionColor), particles.Count * 12, BufferUsage.WriteOnly);
             foreach (var item in particles)
             {
+                ++i;
+                Random rnd = new Random(i);
                 //Диапазон координат от -3 до 3
-                float x = (float)(rnd.NextDouble() - rnd.NextDouble()) * 40;
-                float y = (float)(rnd.NextDouble() - rnd.NextDouble()) * 40;
-                float z = (float)(rnd.NextDouble() - rnd.NextDouble()) * 40;
+                //float x = (float)(rnd.NextDouble() - rnd.NextDouble()) * 40;
+                //float y = (float)(rnd.NextDouble() - rnd.NextDouble()) * 40;
+                //float z = (float)(rnd.NextDouble() - rnd.NextDouble()) * 40;
+                double R = rnd.NextDouble() * 50; 
+                float sin = (float)(rnd.NextDouble() * 180);
+                float cos = (float)(rnd.NextDouble() * 360);
+                float x = (float)(R * Math.Sin(MathHelper.ToRadians(sin)) * Math.Cos(MathHelper.ToRadians(cos)));
+                float y = (float)(R * Math.Sin(MathHelper.ToRadians(sin)) * Math.Sin(MathHelper.ToRadians(cos)));
+                float z = (float)(R * Math.Cos(MathHelper.ToRadians(sin)));
+
                 item.EndPosition = new Vector3(x,y,z);
-                item.Size = 1;
+                item.Size = 1f;
                 item.Init();
+
             }
+            
+
             base.Initialize();
         }
 
@@ -110,10 +126,16 @@ namespace MonoGame3DKezumieParticles
                 Exit();
 
             // TODO: Add your update logic here
+            int j = 0;
             foreach (var item in particles)
             {
                if(item.isMoving) item.Move(gameTime);
+                
+                   item.vertex.CopyTo(Vertex, j);
+                j += 12;            
+                
             }
+            vertexBuffer.SetData<VertexPositionColor>(Vertex);
             base.Update(gameTime);
         }
 
@@ -129,6 +151,8 @@ namespace MonoGame3DKezumieParticles
             graphics.GraphicsDevice.RasterizerState = RasterizerState.CullNone;
             graphics.GraphicsDevice.DepthStencilState = DepthStencilState.Default;
             graphics.GraphicsDevice.SamplerStates[0] = SamplerState.LinearWrap;
+            graphics.GraphicsDevice.SetVertexBuffer(null);
+            graphics.GraphicsDevice.SetVertexBuffer(vertexBuffer);
 
             // TODO: Add your drawing code here
 
@@ -136,15 +160,13 @@ namespace MonoGame3DKezumieParticles
             effect.World = worldMatrix;
             effect.View = viewMatrix;
             effect.Projection = projectionMatrix;
-            foreach (var item in particles)
-            {
-                
+            
                 foreach (EffectPass pass in effect.CurrentTechnique.Passes)
                 {
                     pass.Apply();
-                    graphics.GraphicsDevice.DrawUserPrimitives(PrimitiveType.TriangleList, item.vertex, 0, 4);
+                    graphics.GraphicsDevice.DrawPrimitives(PrimitiveType.TriangleList,0,particles.Count/4);
                 }
-            }
+           
             spriteBatch.Begin();
             spriteBatch.DrawString(font, "For Nami by Victorem", new Vector2(5, 5), Color.White);
             spriteBatch.End();
