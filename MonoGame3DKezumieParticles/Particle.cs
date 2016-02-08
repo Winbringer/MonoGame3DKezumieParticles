@@ -1,50 +1,46 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace MonoGame3DKezumieParticles
 {
     class Particle
     {
-        Vector3 Velocity;
-        public Vector3 Position;
-        float deformation;
-        float step;
+
         float Speed;
         Vector3 Step;
-        public bool isMoving { get; set; }
-        public VertexPositionColor[] vertex;
-        public Color Color;
+        Vector3 Velocity;
+        public Vector3 Position;
+        public bool isMoving { get; set; }       
+        public Color ColorM;
         public Vector3 StartPosition;
         public Vector3 EndPosition;
         public float Size { get; set; }
-        int MinIndex = 1;
-        public short[] indexes;
-        public Particle(float speed, Vector3 position)
+       public int[] indexes;
+        GraphicsDeviceManager graphics;
+        public VertexPositionColor[] Vertex;
+
+        public Particle(float speed, Vector3 position, GraphicsDeviceManager gd)
         {
-            vertex = new VertexPositionColor[12];
+            Vertex = new VertexPositionColor[4];
             Speed = speed * 1000;
             StartPosition = position;
             EndPosition = position;
             Size = 1f;
-            this.Color = Color.Orange;
-            indexes = new short[] {0,1,2,
+            ColorM = Color.Orange;
+            indexes = new int[] {0,1,2,
             0,1,3,
             0,2,3,
             1,2,3
             };
-
+            graphics = gd;
         }
+
         public void Init()
         {
-            Position = StartPosition;
-            deformation = 1;
-            step = 0.01f;
+            Position = StartPosition;         
             isMoving = true;
-            vertex = new VertexPositionColor[12];
+            Vertex = new VertexPositionColor[12];
             Step = new Vector3(
                 (EndPosition.X - StartPosition.X) / Speed,
                 (EndPosition.Y - StartPosition.Y) / Speed,
@@ -55,22 +51,10 @@ namespace MonoGame3DKezumieParticles
             float Y = StartPosition.Y;
             float Z = StartPosition.Z;
 
-            vertex[0] = new VertexPositionColor(new Vector3(X, Y, Z), Color);
-            vertex[1] = new VertexPositionColor(new Vector3(X + Size, Y + Size / 6, Z + Size / 6), Color);
-            vertex[2] = new VertexPositionColor(new Vector3(X + Size / 6, Y + Size, Z + Size / 6), Color);
-            vertex[3] = new VertexPositionColor(new Vector3(X + Size / 6, Y + Size / 6, Z + Size), Color);
-
-            //vertex[3] = new VertexPositionColor(new Vector3(X + 0, Y + 0, Z + 0), Color);
-            //vertex[4] = new VertexPositionColor(new Vector3(X + Size, Y + Size / 6, Z + Size / 6), Color);
-            //vertex[5] = new VertexPositionColor(new Vector3(X + Size / 6, Y + Size / 6, Z + Size), Color);
-
-            //vertex[6] = new VertexPositionColor(new Vector3(X + 0, Y + 0, Z + 0), Color);
-            //vertex[7] = new VertexPositionColor(new Vector3(X + Size / 6, Y + Size / 6, Z + Size), Color);
-            //vertex[8] = new VertexPositionColor(new Vector3(X + Size / 6, Y + Size, Z + Size / 6), Color);
-
-            //vertex[9] = new VertexPositionColor(new Vector3(X + Size / 6, Y + Size / 6, Z + Size), Color);
-            //vertex[10] = new VertexPositionColor(new Vector3(X + Size, Y + Size / 6, Z + Size / 6), Color);
-            //vertex[11] = new VertexPositionColor(new Vector3(X + Size / 6, Y + Size, Z + Size / 6), Color);
+            Vertex[0] = new VertexPositionColor(new Vector3(X, Y, Z), ColorM);
+            Vertex[1] = new VertexPositionColor(new Vector3(X + Size, Y + Size / 6, Z + Size / 6), ColorM);
+            Vertex[2] = new VertexPositionColor(new Vector3(X + Size / 6, Y + Size, Z + Size / 6), ColorM);
+            Vertex[3] = new VertexPositionColor(new Vector3(X + Size / 6, Y + Size / 6, Z + Size), ColorM);            
         }
 
         public void Move(GameTime time)
@@ -87,7 +71,7 @@ namespace MonoGame3DKezumieParticles
            (EndPosition.Z - Position.Z) / Speed);
             double mult = time.ElapsedGameTime.TotalMilliseconds;
             Position.X += (float)((Velocity.X * mult)); /* +(Step.X * mult));*/
-            Position.Y += (float)((Velocity.Y * mult))*2; /** 3 + (Step.Y * mult));*/
+            Position.Y += (float)((Velocity.Y * mult)) * 2; /** 3 + (Step.Y * mult));*/
             Position.Z += (float)((Velocity.Z * mult)); /*+ (Step.Z * mult));*/
             if (Math.Abs(EndPosition.X) > Math.Abs(Position.X)) Position.X += (float)(Step.X * mult);
             else
@@ -109,21 +93,20 @@ namespace MonoGame3DKezumieParticles
             float Y = Position.Y;
             float Z = Position.Z;
 
-            vertex[0].Position = Position;
-            vertex[1].Position = new Vector3(X + Size, Y + Size / 6, Z + Size / 6);
-            vertex[2].Position = new Vector3(X + Size / 6, Y + Size, Z + Size / 6);
-            vertex[3].Position = new Vector3(X + Size / 6, Y + Size / 6, Z + Size);
-            //vertex[4].Position = new Vector3(X + Size, Y + Size / 6, Z + Size / 6);
-            //vertex[5].Position = new Vector3(X + Size / 6, Y + Size / 6, Z + Size);
-
-            //vertex[6].Position = new Vector3(X + 0, Y + 0, Z + 0);
-            //vertex[7].Position = new Vector3(X + Size / 6, Y + Size / 6, Z + Size);
-            //vertex[8].Position = new Vector3(X + Size / 6, Y + Size, Z + Size / 6);
-
-            //vertex[9].Position = new Vector3(X + Size / 6, Y + Size / 6, Z + Size);
-            //vertex[10].Position = new Vector3(X + Size, Y + Size / 6, Z + Size / 6);
-            //vertex[11].Position = new Vector3(X + Size / 6, Y + Size, Z + Size / 6);
+            Vertex[0].Position = Position;
+            Vertex[1].Position = new Vector3(X + Size, Y + Size / 6, Z + Size / 6);
+            Vertex[2].Position = new Vector3(X + Size / 6, Y + Size, Z + Size / 6);
+            Vertex[3].Position = new Vector3(X + Size / 6, Y + Size / 6, Z + Size);
         }
 
+        public void Draw()
+        {
+            //f.World = Matrix.Identity * Matrix.CreateTranslation(Position);
+            //foreach (EffectPass p in f.CurrentTechnique.Passes)
+            //{
+               // p.Apply();
+                graphics.GraphicsDevice.DrawUserIndexedPrimitives(PrimitiveType.TriangleList, Vertex, 0, Vertex.Length, indexes, 0, 4);
+           // }
+        }
     }
 }

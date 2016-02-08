@@ -2,7 +2,7 @@
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
-using System.Collections.Generic;
+
 
 namespace MonoGame3DKezumieParticles
 {
@@ -14,36 +14,48 @@ namespace MonoGame3DKezumieParticles
         GraphicsDeviceManager graphics;
         SpriteBatch spriteBatch;
         BasicEffect effect;
-
-        List<Particle> particles;
+        Particle[] particles;
+        VertexPositionColor[] vertex;
         Matrix projectionMatrix;
         Matrix viewMatrix;
         Matrix worldMatrix;
-        Matrix rotationMatrix = Matrix.Identity;
-
-        VertexPositionColor[] Vertex;
+        Matrix rotashion = Matrix.Identity;
+        MouseState mouse;
+        MouseState lastMouseState;
+        Color[] ColorMy;
         float cameraDistance;
         SpriteFont font;
+        int c;
+        double t;
+        string s;
+        // A vertex buffer holding our particles. This contains the same data as
+        // the particles array, but copied across to where the GPU can access it.
+        DynamicVertexBuffer vertexBuffer;
+        // Index buffer turns sets of four vertices into particle quads (pairs of triangles).
+        IndexBuffer indexBuffer;
+        private int[] indices;
 
         public Game1()
         {
-
             Content.RootDirectory = "Content";
-            cameraDistance = 50;
+            cameraDistance = 200;
             graphics = new GraphicsDeviceManager(this);
             graphics.PreferredBackBufferHeight = 700;
             graphics.PreferredBackBufferWidth = 800;
             Window.Title = "Kezumie";
             IsMouseVisible = true;
-            
-            particles = new List<Particle>();
 
-            for (int i = 0; i < 10000; i++)
-            {
-                particles.Add(new Particle(10, new Vector3(0f, 0f, 0f)));
-            }
-            Vertex = new VertexPositionColor[particles.Count * 12];
-           
+            //vertexBuffer = new DynamicVertexBuffer(GraphicsDevice, size, BufferUsage.Points);
+            //vertexBuffer. += new EventHandler(vertexBuffer_ContentLost);
+            //vertexBuffer.SetData(particles);
+            //vertexBuffer.SetData(firstNewParticle * stride * 4, particles,
+            //                        firstNewParticle * 4,
+            //                        (firstFreeParticle - firstNewParticle) * 4,
+            //                        stride, SetDataOptions.NoOverwrite);
+
+            this.ColorMy = new Color[] { new Color(0, 255, 0, 255), Color.Red, Color.Blue };
+
+            particles = new Particle[100000];
 
             viewMatrix = Matrix.CreateLookAt(new Vector3(0, 0, 200), Vector3.Zero, Vector3.Up);
             projectionMatrix = Matrix.CreatePerspectiveFieldOfView(MathHelper.PiOver4,
@@ -61,31 +73,59 @@ namespace MonoGame3DKezumieParticles
         /// </summary>
         protected override void Initialize()
         {
-            int i = 0;
-            // TODO: Add your initialization logic here
-           
-            foreach (var item in particles)
+            for (int i = 0; i < particles.Length; i++)
             {
-                ++i;
                 Random rnd = new Random(i);
                 //Диапазон координат от -40 до 40
                 //float x = (float)(rnd.NextDouble() - rnd.NextDouble()) * 40;
                 //float y = (float)(rnd.NextDouble() - rnd.NextDouble()) * 40;
                 //float z = (float)(rnd.NextDouble() - rnd.NextDouble()) * 40;
-                double R = rnd.NextDouble() * 40; 
+                double R = rnd.NextDouble() * 40;
                 float sin = (float)(rnd.NextDouble() * 180);
                 float cos = (float)(rnd.NextDouble() * 360);
                 float x = (float)(R * Math.Sin(MathHelper.ToRadians(sin)) * Math.Cos(MathHelper.ToRadians(cos)));
                 float y = (float)(R * Math.Sin(MathHelper.ToRadians(sin)) * Math.Sin(MathHelper.ToRadians(cos)));
                 float z = (float)(R * Math.Cos(MathHelper.ToRadians(sin)));
+                particles[i] = new Particle(10, new Vector3(0f, 0f, 0f), graphics)
+                {
+                    EndPosition = new Vector3(x, y, z),
+                    Size =1f,
+                    ColorM = new Color(255, 128, 0, 255)
+                };
+                particles[i].Init();
+            }
+            graphics.GraphicsDevice.Flush();
+            vertex = new VertexPositionColor[particles.Length * 4];
+            vertexBuffer = new DynamicVertexBuffer(graphics.GraphicsDevice, typeof(VertexPositionColor), vertex.Length, BufferUsage.WriteOnly);
 
-                item.EndPosition = new Vector3(x,y,z);
-                item.Size = 1f;
-                item.Init();
+            indices = new int[vertex.Length * 3];
+            indexBuffer = new IndexBuffer(GraphicsDevice, typeof(int), indices.Length, BufferUsage.WriteOnly);
+
+            for (int i = 0; i < particles.Length; i++)
+            {
+
+                vertex[i * 4] = particles[i].Vertex[0];
+                vertex[i * 4 + 1] = particles[i].Vertex[1];
+                vertex[i * 4 + 2] = particles[i].Vertex[2];
+                vertex[i * 4 + 3] = particles[i].Vertex[3];
+                indices[i * 12] = 0 + i * 4;
+                indices[i * 12 + 1] = 1 + i * 4;
+                indices[i * 12 + 2] = 2 + i * 4;
+                indices[i * 12 + 3] = 0 + i * 4;
+                indices[i * 12 + 4] = 2 + i * 4;
+                indices[i * 12 + 5] = 3 + i * 4;
+                indices[i * 12 + 6] = 0 + i * 4;
+                indices[i * 12 + 7] = 1 + i * 4;
+                indices[i * 12 + 8] = 3 + i * 4;
+                indices[i * 12 + 9] = 1 + i * 4;
+                indices[i * 12 + 10] = 2 + i * 4;
+                indices[i * 12 + 11] = 3 + i * 4;
+
 
             }
-            
 
+            indexBuffer.SetData(indices);
+            vertexBuffer.SetData(vertex);
             base.Initialize();
         }
 
@@ -95,12 +135,13 @@ namespace MonoGame3DKezumieParticles
         /// </summary>
         protected override void LoadContent()
         {
-            // Create a new SpriteBatch, which can be used to draw textures.
+
             spriteBatch = new SpriteBatch(GraphicsDevice);
             effect = new BasicEffect(graphics.GraphicsDevice);
-           // InitializeEffect();
+            effect.VertexColorEnabled = true;
             font = Content.Load<SpriteFont>("font");
-            // TODO: use this.Content to load your game content here
+
+
         }
 
         /// <summary>
@@ -121,20 +162,24 @@ namespace MonoGame3DKezumieParticles
         {
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
+           
+            CameraMove();
 
-            // TODO: Add your update logic here
-            int j = 0;
-            foreach (var item in particles)
+            for (int i = 0; i < particles.Length; i++)
             {
-               if(item.isMoving) item.Move(gameTime);
-                
-                //   item.vertex.CopyTo(Vertex, j);
-                //j += 12;            
-                
+                if (particles[i].isMoving)
+                {
+                    particles[i].Move(gameTime);
+                }
+                vertex[i * 4] = particles[i].Vertex[0];
+                vertex[i * 4 + 1] = particles[i].Vertex[1];
+                vertex[i * 4 + 2] = particles[i].Vertex[2];
+                vertex[i * 4 + 3] = particles[i].Vertex[3];
             }
-         
+           
             base.Update(gameTime);
         }
+
 
         /// <summary>
         /// This is called when the game should draw itself.
@@ -142,38 +187,70 @@ namespace MonoGame3DKezumieParticles
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Draw(GameTime gameTime)
         {
-
-            graphics.GraphicsDevice.Clear(Color.Black);            
-            graphics.GraphicsDevice.BlendState = BlendState.Opaque;
+            ++c;
+            t += gameTime.ElapsedGameTime.TotalMilliseconds;
+            if (c > 100)
+            {
+                s += " " + c + " " + t / 1000 + Environment.NewLine;
+                c = 0;
+                t = 0;
+            }
+            vertexBuffer.SetData(vertex);           
+            graphics.GraphicsDevice.Clear(Color.Black);
+            graphics.GraphicsDevice.BlendState = BlendState.Additive;
             graphics.GraphicsDevice.RasterizerState = RasterizerState.CullNone;
             graphics.GraphicsDevice.DepthStencilState = DepthStencilState.Default;
-            graphics.GraphicsDevice.SamplerStates[0] = SamplerState.LinearWrap;       
+            graphics.GraphicsDevice.SamplerStates[0] = SamplerState.LinearWrap;
 
-            // TODO: Add your drawing code here
-
-            effect.VertexColorEnabled = true;
             effect.World = worldMatrix;
             effect.View = viewMatrix;
             effect.Projection = projectionMatrix;
-            
-                foreach (EffectPass pass in effect.CurrentTechnique.Passes)
-                {
-                    pass.Apply();
-                foreach (var item in particles)
-                {
-                    
-                   // graphics.GraphicsDevice.DrawUserPrimitives(PrimitiveType.TriangleList, item.vertex, 0, 4);
-                    graphics.GraphicsDevice.DrawUserIndexedPrimitives(PrimitiveType.TriangleList, item.vertex, 0, item.vertex.Length, item.indexes, 0, 4);
-                }
-                }
-           
+            graphics.GraphicsDevice.SetVertexBuffer(null);
+            graphics.GraphicsDevice.SetVertexBuffer(vertexBuffer);
+            graphics.GraphicsDevice.Indices = indexBuffer;
+
+            foreach (EffectPass pass in effect.CurrentTechnique.Passes)
+            {
+                pass.Apply();
+                graphics.GraphicsDevice.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0,
+                                                         0, vertex.Length,
+                                                         0, vertex.Length / 4);
+                //for (int i = 0; i < particles.Length; i++)
+                //{
+                //    particles[i].Draw();
+                //}
+            }
+
             spriteBatch.Begin();
-            spriteBatch.DrawString(font, "For Nami by Victorem", new Vector2(5, 5), Color.White);
+            spriteBatch.DrawString(font, "For Nami by Victorem" + s, new Vector2(5, 5), Color.Aqua);
             spriteBatch.End();
             GraphicsDevice.DepthStencilState = DepthStencilState.Default;
+            effect.World = worldMatrix;
             base.Draw(gameTime);
         }
 
+
+        private void CameraMove()
+        {
+            mouse = Mouse.GetState();
+
+            if (Keyboard.GetState().IsKeyDown(Keys.Left)) rotashion *= Matrix.CreateRotationY(-1 * MathHelper.ToRadians(1));
+            if (Keyboard.GetState().IsKeyDown(Keys.Right)) rotashion *= Matrix.CreateRotationY(MathHelper.ToRadians(1));
+            if (Keyboard.GetState().IsKeyDown(Keys.Up)) rotashion *= Matrix.CreateRotationX(-1 * MathHelper.ToRadians(1));
+            if (Keyboard.GetState().IsKeyDown(Keys.Down)) rotashion *= Matrix.CreateRotationX(MathHelper.ToRadians(1));
+
+            if (mouse.ScrollWheelValue < lastMouseState.ScrollWheelValue) cameraDistance -= 10;
+            if (mouse.ScrollWheelValue > lastMouseState.ScrollWheelValue) cameraDistance += 10;
+
+            if (Keyboard.GetState().IsKeyDown(Keys.S)) cameraDistance -= 10;
+            if (Keyboard.GetState().IsKeyDown(Keys.W)) cameraDistance += 10;
+            if (cameraDistance < 1) cameraDistance = 1;
+            if (cameraDistance > 500) cameraDistance = 500;
+
+            viewMatrix = rotashion * Matrix.CreateLookAt(new Vector3(0, 0, cameraDistance),
+                                              new Vector3(0, 0, 0), Vector3.Up);
+            lastMouseState = mouse;
+        }
         /// <summary>
         /// Инициализация базовых эффектов (настроек параметров и способов обработки)
         /// используемых для работы с трехмерной моделью
