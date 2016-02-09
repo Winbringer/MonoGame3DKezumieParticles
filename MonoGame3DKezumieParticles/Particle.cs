@@ -65,12 +65,12 @@ namespace MonoGame3DKezumieParticles
             }
 
             double mult = time.ElapsedGameTime.TotalMilliseconds;
-            // Velocity = new Vector3((EndPosition.X - Position.X) / Speed,
-            //(EndPosition.Y - Position.Y) / Speed,
-            //(EndPosition.Z - Position.Z) / Speed);
-            // Position.X += (float)((Velocity.X * mult)); /* +(Step.X * mult));*/
-            // Position.Y += (float)((Velocity.Y * mult)) * 2; /** 3 + (Step.Y * mult));*/
-            // Position.Z += (float)((Velocity.Z * mult)); /*+ (Step.Z * mult));*/
+            Velocity = new Vector3((EndPosition.X - Position.X) / Speed,
+           (EndPosition.Y - Position.Y) / Speed,
+           (EndPosition.Z - Position.Z) / Speed);
+            Position.X += (float)((Velocity.X * mult));
+            Position.Y += (float)((Velocity.Y * mult));
+            Position.Z += (float)((Velocity.Z * mult));
             if (Math.Abs(EndPosition.X) > Math.Abs(Position.X)) Position.X += (float)(Step.X * mult);
             else
             if (Math.Abs(EndPosition.X) < Math.Abs(Position.X)) Position.X -= (float)(Step.X * mult);

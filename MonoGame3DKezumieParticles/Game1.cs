@@ -2,7 +2,7 @@
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
-
+using System.Threading.Tasks;
 
 namespace MonoGame3DKezumieParticles
 {
@@ -27,8 +27,8 @@ namespace MonoGame3DKezumieParticles
         SpriteFont font;
         int c;
         double t;
-        string s;       
-        DynamicVertexBuffer vertexBuffer;       
+        string s;
+        DynamicVertexBuffer vertexBuffer;
         IndexBuffer indexBuffer;
         private int[] indices;
 
@@ -69,16 +69,16 @@ namespace MonoGame3DKezumieParticles
                 //float x = (float)(rnd.NextDouble() - rnd.NextDouble()) * 40;
                 //float y = (float)(rnd.NextDouble() - rnd.NextDouble()) * 40;
                 //float z = (float)(rnd.NextDouble() - rnd.NextDouble()) * 40;
-                double R = rnd.NextDouble() * 40;
+                double R = rnd.NextDouble() * 50;
                 float sin = (float)(rnd.NextDouble() * 180);
                 float cos = (float)(rnd.NextDouble() * 360);
                 float x = (float)(R * Math.Sin(MathHelper.ToRadians(sin)) * Math.Cos(MathHelper.ToRadians(cos)));
                 float y = (float)(R * Math.Sin(MathHelper.ToRadians(sin)) * Math.Sin(MathHelper.ToRadians(cos)));
                 float z = (float)(R * Math.Cos(MathHelper.ToRadians(sin)));
-                particles[i] = new Particle(10, new Vector3(0f, 0f, 0f))
+                particles[i] = new Particle(5, new Vector3(0f, 0f, 0f))
                 {
                     EndPosition = new Vector3(x, y, z),
-                    Size =1f,
+                    Size = 1f,
                     ColorM = new Color(255, 128, 0, 255)
                 };
                 particles[i].Init();
@@ -151,21 +151,16 @@ namespace MonoGame3DKezumieParticles
         {
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
-           
+            FactorialAsync(particles, gameTime);
             CameraMove();
-
             for (int i = 0; i < particles.Length; i++)
             {
-                if (particles[i].isMoving)
-                {
-                    particles[i].Move(gameTime);
-                }
                 vertex[i * 4] = particles[i].Vertex[0];
                 vertex[i * 4 + 1] = particles[i].Vertex[1];
                 vertex[i * 4 + 2] = particles[i].Vertex[2];
                 vertex[i * 4 + 3] = particles[i].Vertex[3];
             }
-           
+
             base.Update(gameTime);
         }
 
@@ -184,7 +179,7 @@ namespace MonoGame3DKezumieParticles
                 c = 0;
                 t = 0;
             }
-            vertexBuffer.SetData(vertex);           
+            vertexBuffer.SetData(vertex);
             graphics.GraphicsDevice.Clear(Color.Black);
             graphics.GraphicsDevice.BlendState = BlendState.Additive;
             graphics.GraphicsDevice.RasterizerState = RasterizerState.CullNone;
@@ -193,7 +188,8 @@ namespace MonoGame3DKezumieParticles
 
             effect.World = worldMatrix;
             effect.View = viewMatrix;
-            effect.Projection = projectionMatrix;           
+            effect.Projection = projectionMatrix;
+            graphics.GraphicsDevice.SetVertexBuffer(null);
             graphics.GraphicsDevice.SetVertexBuffer(vertexBuffer);
             graphics.GraphicsDevice.Indices = indexBuffer;
 
@@ -202,7 +198,7 @@ namespace MonoGame3DKezumieParticles
                 pass.Apply();
                 graphics.GraphicsDevice.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0,
                                                          0, vertex.Length,
-                                                         0, vertex.Length / 4);              
+                                                         0, vertex.Length / 4);
             }
 
             spriteBatch.Begin();
@@ -287,6 +283,23 @@ namespace MonoGame3DKezumieParticles
                 }
             }
 
+        }
+
+        Task FactorialAsync(Particle[] p,  GameTime gt)
+        {
+
+         return Task.Factory.StartNew(() =>
+           {
+               for (int i = 0; i < p.Length; i++)
+               {
+                   if (p[i].isMoving) p[i].Move(gt);
+               }
+                            
+           });
+        }
+         void DisplayResultAsync(Particle[] p,  GameTime gt)
+        {
+             FactorialAsync(p, gt).Start();
         }
     }
 }
