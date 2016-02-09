@@ -11,6 +11,8 @@ namespace MonoGame3DKezumieParticles
     /// </summary>
     public class Game1 : Game
     {
+        #region Поля
+        double time;
         GraphicsDeviceManager graphics;
         SpriteBatch spriteBatch;
         BasicEffect effect;
@@ -21,8 +23,7 @@ namespace MonoGame3DKezumieParticles
         Matrix worldMatrix;
         Matrix rotashion = Matrix.Identity;
         MouseState mouse;
-        MouseState lastMouseState;
-        Color[] ColorMy;
+        MouseState lastMouseState;        
         float cameraDistance;
         SpriteFont font;
         int c;
@@ -31,26 +32,22 @@ namespace MonoGame3DKezumieParticles
         DynamicVertexBuffer vertexBuffer;
         IndexBuffer indexBuffer;
         private int[] indices;
+        #endregion
 
         public Game1()
         {
+            particles = new Particle[1000000];
             Content.RootDirectory = "Content";
             cameraDistance = 200;
             graphics = new GraphicsDeviceManager(this);
             graphics.PreferredBackBufferHeight = 700;
             graphics.PreferredBackBufferWidth = 800;
             Window.Title = "Kezumie";
-            IsMouseVisible = true;
-
-            this.ColorMy = new Color[] { new Color(0, 255, 0, 255), Color.Red, Color.Blue };
-
-            particles = new Particle[1000000];
-
+            IsMouseVisible = true; 
             viewMatrix = Matrix.CreateLookAt(new Vector3(0, 0, 200), Vector3.Zero, Vector3.Up);
             projectionMatrix = Matrix.CreatePerspectiveFieldOfView(MathHelper.PiOver4,
                  graphics.PreferredBackBufferWidth /
-                (float)graphics.PreferredBackBufferHeight,
-                1f, 500);
+                (float)graphics.PreferredBackBufferHeight, 1f, 500);
             worldMatrix = Matrix.CreateWorld(new Vector3(0f, 0f, 0f), new Vector3(0, 0, -1), Vector3.Up);
         }
 
@@ -65,17 +62,13 @@ namespace MonoGame3DKezumieParticles
             for (int i = 0; i < particles.Length; i++)
             {
                 Random rnd = new Random(i);
-                //Диапазон координат от -40 до 40
-                //float x = (float)(rnd.NextDouble() - rnd.NextDouble()) * 40;
-                //float y = (float)(rnd.NextDouble() - rnd.NextDouble()) * 40;
-                //float z = (float)(rnd.NextDouble() - rnd.NextDouble()) * 40;
                 double R = rnd.NextDouble() * 50;
                 float sin = (float)(rnd.NextDouble() * 180);
                 float cos = (float)(rnd.NextDouble() * 360);
                 float x = (float)(R * Math.Sin(MathHelper.ToRadians(sin)) * Math.Cos(MathHelper.ToRadians(cos)));
                 float y = (float)(R * Math.Sin(MathHelper.ToRadians(sin)) * Math.Sin(MathHelper.ToRadians(cos)));
                 float z = (float)(R * Math.Cos(MathHelper.ToRadians(sin)));
-                particles[i] = new Particle(5, new Vector3(0f, 0f, 0f))
+                particles[i] = new Particle(15, new Vector3(0f, 0f, 0f))
                 {
                     EndPosition = new Vector3(x, y, z),
                     Size = 1f,
@@ -83,6 +76,7 @@ namespace MonoGame3DKezumieParticles
                 };
                 particles[i].Init();
             }
+
             graphics.GraphicsDevice.Flush();
             vertex = new VertexPositionColor[particles.Length * 4];
             vertexBuffer = new DynamicVertexBuffer(graphics.GraphicsDevice, typeof(VertexPositionColor), vertex.Length, BufferUsage.WriteOnly);
@@ -109,8 +103,6 @@ namespace MonoGame3DKezumieParticles
                 indices[i * 12 + 9] = 1 + i * 4;
                 indices[i * 12 + 10] = 2 + i * 4;
                 indices[i * 12 + 11] = 3 + i * 4;
-
-
             }
 
             indexBuffer.SetData(indices);
@@ -149,21 +141,26 @@ namespace MonoGame3DKezumieParticles
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Update(GameTime gameTime)
         {
+            
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
-                Exit();
-            FactorialAsync(particles, gameTime);
-            CameraMove();
-            for (int i = 0; i < particles.Length; i++)
-            {
-                vertex[i * 4] = particles[i].Vertex[0];
-                vertex[i * 4 + 1] = particles[i].Vertex[1];
-                vertex[i * 4 + 2] = particles[i].Vertex[2];
-                vertex[i * 4 + 3] = particles[i].Vertex[3];
-            }
-
+                Exit();           
+            time += gameTime.ElapsedGameTime.TotalMilliseconds;
+            if (time < 32) return;           
+                time = 0;
+                MoveAsync(particles, gameTime);
+                CameraMove();
+                for (int i = 0; i < particles.Length; i++)
+                {
+                    vertex[i * 4] = particles[i].Vertex[0];
+                    vertex[i * 4 + 1] = particles[i].Vertex[1];
+                    vertex[i * 4 + 2] = particles[i].Vertex[2];
+                    vertex[i * 4 + 3] = particles[i].Vertex[3];
+                }
+            
             base.Update(gameTime);
         }
 
+       
 
         /// <summary>
         /// This is called when the game should draw itself.
@@ -171,14 +168,7 @@ namespace MonoGame3DKezumieParticles
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Draw(GameTime gameTime)
         {
-            ++c;
-            t += gameTime.ElapsedGameTime.TotalMilliseconds;
-            if (c > 100)
-            {
-                s += " " + c + " " + t / 1000 + Environment.NewLine;
-                c = 0;
-                t = 0;
-            }
+            FPS(gameTime);
             vertexBuffer.SetData(vertex);
             graphics.GraphicsDevice.Clear(Color.Black);
             graphics.GraphicsDevice.BlendState = BlendState.Additive;
@@ -196,9 +186,11 @@ namespace MonoGame3DKezumieParticles
             foreach (EffectPass pass in effect.CurrentTechnique.Passes)
             {
                 pass.Apply();
-                graphics.GraphicsDevice.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0,
-                                                         0, vertex.Length,
-                                                         0, vertex.Length / 4);
+                graphics.GraphicsDevice.DrawIndexedPrimitives(
+                    PrimitiveType.TriangleList,
+                    0, 0, vertex.Length,
+                    0, vertex.Length / 4
+                    );
             }
 
             spriteBatch.Begin();
@@ -208,7 +200,6 @@ namespace MonoGame3DKezumieParticles
             effect.World = worldMatrix;
             base.Draw(gameTime);
         }
-
 
         private void CameraMove()
         {
@@ -231,75 +222,35 @@ namespace MonoGame3DKezumieParticles
                                               new Vector3(0, 0, 0), Vector3.Up);
             lastMouseState = mouse;
         }
-        /// <summary>
-        /// Инициализация базовых эффектов (настроек параметров и способов обработки)
-        /// используемых для работы с трехмерной моделью
-        /// </summary>
-        private void InitializeEffect()
-        {
-            //Создание объекта для вывода изображений
-            effect = new BasicEffect(graphics.GraphicsDevice);
-            //Установка матриц
-            effect.World = worldMatrix;
-            effect.View = viewMatrix;
-            effect.Projection = projectionMatrix;
 
-            // Цвета различных видов освещения
-            effect.AmbientLightColor = new Vector3(0.1f, 0.1f, 0.1f);
-            effect.DiffuseColor = new Vector3(1.0f, 1.0f, 1.0f);
-            effect.SpecularColor = new Vector3(0.25f, 0.25f, 0.25f);
-            effect.SpecularPower = 5.0f;
-            effect.Alpha = 1.0f;
-            //Включим освещение
-            effect.LightingEnabled = true;
-            if (effect.LightingEnabled)
+        Task MoveAsync(Particle[] p, GameTime gt)
+        {
+
+            return Task.Factory.StartNew(() =>
+              {
+                  for (int i = 0; i < p.Length; i++)
+                  {
+                      if (p[i].isMoving) p[i].Move(gt);
+                  }
+
+              });
+        }
+
+        private void FPS(GameTime gameTime)
+        {
+            ++c;
+            t += gameTime.ElapsedGameTime.TotalMilliseconds;
+            if (c > 100)
             {
-                effect.DirectionalLight0.Enabled = true; // активируем каждый источник света отдельно
-                if (effect.DirectionalLight0.Enabled)
-                {
-                    // Направление по Х
-                    effect.DirectionalLight0.DiffuseColor = new Vector3(1, 0, 0); // диапазон от 0 до 1
-                    effect.DirectionalLight0.Direction = Vector3.Normalize(new Vector3(-1, 0, 0));
-                    // Направление от источника света к началу координат сцены
-                    effect.DirectionalLight0.SpecularColor = Vector3.One;
-                }
-
-                effect.DirectionalLight1.Enabled = true;
-                if (effect.DirectionalLight1.Enabled)
-                {
-                    // Направление по У
-                    effect.DirectionalLight1.DiffuseColor = new Vector3(0, 0.75f, 0);
-                    effect.DirectionalLight1.Direction = Vector3.Normalize(new Vector3(0, -1, 0));
-                    effect.DirectionalLight1.SpecularColor = Vector3.One;
-                }
-
-                effect.DirectionalLight2.Enabled = true;
-                if (effect.DirectionalLight2.Enabled)
-                {
-                    // Направление по Z
-                    effect.DirectionalLight2.DiffuseColor = new Vector3(0, 0, 0.5f);
-                    effect.DirectionalLight2.Direction = Vector3.Normalize(new Vector3(0, 0, -1));
-                    effect.DirectionalLight2.SpecularColor = Vector3.One;
-                }
+                s += " " + c + " " + t / 1000 + Environment.NewLine;
+                c = 0;
+                t = 0;
             }
-
         }
 
-        Task FactorialAsync(Particle[] p,  GameTime gt)
-        {
-
-         return Task.Factory.StartNew(() =>
-           {
-               for (int i = 0; i < p.Length; i++)
-               {
-                   if (p[i].isMoving) p[i].Move(gt);
-               }
-                            
-           });
-        }
-         void DisplayResultAsync(Particle[] p,  GameTime gt)
-        {
-             FactorialAsync(p, gt).Start();
-        }
+        //Диапазон координат от -40 до 40
+        //float x = (float)(rnd.NextDouble() - rnd.NextDouble()) * 40;
+        //float y = (float)(rnd.NextDouble() - rnd.NextDouble()) * 40;
+        //float z = (float)(rnd.NextDouble() - rnd.NextDouble()) * 40;
     }
 }

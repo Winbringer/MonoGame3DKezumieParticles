@@ -6,18 +6,18 @@ namespace MonoGame3DKezumieParticles
 {
     class Particle
     {
-
+        #region Поля
         float Speed;
         Vector3 Step;
         Vector3 Velocity;
-        public Vector3 Position;
+        Vector3 Position;
         public bool isMoving { get; set; }
         public Color ColorM;
         public Vector3 StartPosition;
         public Vector3 EndPosition;
-        public float Size { get; set; }
-        public int[] indexes;
+        public float Size { get; set; }     
         public VertexPositionColor[] Vertex;
+        #endregion
 
         public Particle(float speed, Vector3 position)
         {
@@ -26,13 +26,7 @@ namespace MonoGame3DKezumieParticles
             StartPosition = position;
             EndPosition = position;
             Size = 1f;
-            ColorM = Color.Orange;
-            indexes = new int[] {0,1,2,
-            0,1,3,
-            0,2,3,
-            1,2,3
-            };
-
+            ColorM = Color.Orange;           
         }
 
         public void Init()
