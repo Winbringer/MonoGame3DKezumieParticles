@@ -33,7 +33,7 @@ namespace MonoGame3DKezumieParticles
             particles = new Particle[1000000];
             indices = new int[particles.Length * 6];
             vertex = new VertexPositionTexture[particles.Length * 4];
-            Size = new Vector2(0.1f, 0.1f);
+            Size = new Vector2(0.01f, 0.01f);
             cameraDistance = 100;
             graphics = new GraphicsDeviceManager(this);
             graphics.PreferredBackBufferHeight = 700;
@@ -113,11 +113,11 @@ namespace MonoGame3DKezumieParticles
                 Exit();
             time += gameTime.ElapsedGameTime.TotalMilliseconds;
            if (time < 32) return;
-            time = 0;
-            
+            time = 0;            
             task = MoveAsync(gameTime);
-            CameraMove();
+            CameraMove();          
             base.Update(gameTime);
+            
         }
 
         protected override void Draw(GameTime gameTime)
