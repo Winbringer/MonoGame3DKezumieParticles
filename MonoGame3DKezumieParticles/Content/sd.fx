@@ -1,8 +1,7 @@
-﻿//float4x4 World;
-float4x4 View;
+﻿float4x4 View;
 float4x4 Projection;
 texture Texture;
-
+float2 Size;
 
 sampler2D textureSampler = sampler_state {
 	Texture = (Texture);
@@ -25,33 +24,19 @@ struct VertexShaderOutput
 	float2 TextureCoordinate : TEXCOORD1; 
 };
 
-
-// Vertex shader helper for computing the position of a particle.
-float4 ComputeParticlePosition(float3 position)
-{
-	// Apply the camera view and projection transforms.	
-	                                                                // матрица камеры
-	float4x4 matRevTrans = View;                                          // здесь будет нужная матрица
-	matRevTrans._41 = matRevTrans._42 = matRevTrans._43 = 0;    // смещение не трогаем
-	matRevTrans =transpose(matRevTrans);
-	return mul(mul(float4(position, 1), View), Projection); //
-}
-
 VertexShaderOutput VertexShaderFunction(VertexShaderInput input)
 {
 	VertexShaderOutput output;
-
-	/*float3 pos = input.Position;
-	float3 pos_offset = float3(input.TextureCoordinate, 0);
-	float3 view_pos = mul(float4(pos, 1.0f), View).xyz + pos_offset;
-	float3 view_norm = normalize(pos_offset) + float3(0.f, 0.f, -0.3f);
-	float4 proj_pos = mul(float4(view_pos, 1.0f), Projection);
-	output.Position = proj_pos;*/
-	/*float4 worldPosition = mul(input.Position, World);
-	float4 viewPosition = mul(worldPosition, View);
-	output.Position = mul(viewPosition, Projection);*/	
+	//Переводим позицию вертекса в трехмерный вектор.
 	float3 position = input.Position;
-	output.Position = mul(mul(float4(position, 1), View), Projection);
+	//Расчитываме позицию вертекса в матрицие камеры.
+	// float4(position, 1) - это мировая матрица направленная на 1 по оси Z; Identity матрица. с центром в поции вертекса.
+	float4 viewPosition = mul(float4(position, 1), View); 
+	//Смешаем вертекс по оси X и Y на дистанцию равную размерам квадрата. В соответстви его позии в квадрате (0,0 0,1 1,1 1,0) или ( -1,1 1,1 1, -1, -1,1).
+	viewPosition.xy += input.TextureCoordinate * Size;
+	//Находим позицию вертекса в матрице проекции.
+	output.Position = mul(viewPosition, Projection);
+	//Устанавливаем коодинаты для текстуры вектекса.
 	output.TextureCoordinate = input.TextureCoordinate;
 	return output;
 }
@@ -70,3 +55,7 @@ technique sd
 		PixelShader = compile  ps_4_0 PixelShaderFunction();
 	}
 }
+
+/*float4 worldPosition = mul(input.Position, World);
+float4 viewPosition = mul(worldPosition, View);
+output.Position = mul(viewPosition, Projection);*/

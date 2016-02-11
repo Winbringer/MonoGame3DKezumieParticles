@@ -7,13 +7,10 @@ using System.Threading.Tasks;
 
 namespace MonoGame3DKezumieParticles
 {
-    /// <summary>
-    /// This is the main type for your game.
-    /// </summary>
     public class Game1 : Game
     {
         #region Поля
-        double time;
+        double time;        
         GraphicsDeviceManager graphics;
         SpriteBatch spriteBatch;
         Effect effect1;
@@ -21,13 +18,10 @@ namespace MonoGame3DKezumieParticles
         VertexPositionTexture[] vertex;
         Matrix projectionMatrix;
         Matrix viewMatrix;
-        Matrix rotashion = Matrix.Identity;
-        Matrix World = Matrix.Identity;
+        Matrix rotashion = Matrix.Identity;        
         Matrix translathion = Matrix.Identity;
         MouseState mouse;
-        MouseState lastMouseState;
-        KeyboardState l;
-        KeyboardState n;
+        MouseState lastMouseState;      
         float cameraDistance;
         SpriteFont font;
         int c;
@@ -37,65 +31,55 @@ namespace MonoGame3DKezumieParticles
         IndexBuffer indexBuffer;
         private int[] indices;
         Texture2D texture;
+        Vector2 Size;
         #endregion
 
         public Game1()
         {
-
-            particles = new Particle[100];
-            Content.RootDirectory = "Content";
-            cameraDistance = 100;
+            particles = new Particle[10000];
+            indices = new int[particles.Length * 6];
+            vertex = new VertexPositionTexture[particles.Length * 4];
+            Size = new Vector2(1, 1);           
+            cameraDistance = 50;
             graphics = new GraphicsDeviceManager(this);
             graphics.PreferredBackBufferHeight = 700;
             graphics.PreferredBackBufferWidth = 800;
+            Content.RootDirectory = "Content";
             Window.Title = "Kezumie";
             IsMouseVisible = true;
             //Создаем матрицы вида, проекции и камеры.
-            viewMatrix = Matrix.CreateLookAt(new Vector3(0, 0, 100), Vector3.Zero, Vector3.Up);
+            viewMatrix = Matrix.CreateLookAt(new Vector3(0, 0, 50), Vector3.Zero, Vector3.Up);
             projectionMatrix = Matrix.CreatePerspectiveFieldOfView(MathHelper.PiOver4,
                  graphics.PreferredBackBufferWidth /
                 (float)graphics.PreferredBackBufferHeight, 1f, 2000);
-            World = Matrix.CreateWorld(Vector3.Zero, Vector3.Backward, Vector3.Up);
-
-
         }
-
-        /// <summary>
-        /// Allows the game to perform any initialization it needs to before starting to run.
-        /// This is where it can query for any required services and load any non-graphic
-        /// related content.  Calling base.Initialize will enumerate through any components
-        /// and initialize them as well.
-        /// </summary>
+  
         protected override void Initialize()
         {
-
-            graphics.GraphicsDevice.Flush();
-            vertex = new VertexPositionTexture[particles.Length * 4];
-            vertexBuffer = new DynamicVertexBuffer(graphics.GraphicsDevice, typeof(VertexPositionTexture), vertex.Length, BufferUsage.WriteOnly);
-            indices = new int[particles.Length * 6];
+            //Создаем буффер индексов и вершин
+            graphics.GraphicsDevice.Flush();           
+            vertexBuffer = new DynamicVertexBuffer(graphics.GraphicsDevice, typeof(VertexPositionTexture), vertex.Length, BufferUsage.WriteOnly);            
             indexBuffer = new IndexBuffer(graphics.GraphicsDevice, typeof(int), indices.Length, BufferUsage.WriteOnly);
-
+            //Цикл для заполнения данным массива вершин
             for (int i = 0; i < particles.Length; i++)
             {
                 Random rnd = new Random(i);
-                double R = rnd.NextDouble() * 10;
+                //Вычисляем позицию частицы в трехмерном пространстве
+                double R = rnd.NextDouble() * 15;
                 float sin = (float)(rnd.NextDouble() * 180);
                 float cos = (float)(rnd.NextDouble() * 360);
                 float x = (float)(R * Math.Sin(MathHelper.ToRadians(sin)) * Math.Cos(MathHelper.ToRadians(cos)));
                 float y = (float)(R * Math.Sin(MathHelper.ToRadians(sin)) * Math.Sin(MathHelper.ToRadians(cos)));
                 float z = (float)(R * Math.Cos(MathHelper.ToRadians(sin)));
                 //Создаем частицу с начальными данными
-                particles[i] = new Particle(15, new Vector3(0f, 0f, 0f))
-                {
-                    EndPosition = new Vector3(x, y, z),
-                    Size = 10f,
-                };
+                particles[i] = new Particle(2, new Vector3(0f, 0f, 0f)) {  EndPosition = new Vector3(x, y, z)};
                 particles[i].Init();
-
+                //Переносим данные о точках частицы в массив вершин.
                 vertex[i * 4] = particles[i].Vertex[0];
                 vertex[i * 4 + 1] = particles[i].Vertex[1];
                 vertex[i * 4 + 2] = particles[i].Vertex[2];
                 vertex[i * 4 + 3] = particles[i].Vertex[3];
+                //Создаем массив индексов для вершин.
                 indices[i * 6] = 0 + i * 4;
                 indices[i * 6 + 1] = 1 + i * 4;
                 indices[i * 6 + 2] = 2 + i * 4;
@@ -103,16 +87,14 @@ namespace MonoGame3DKezumieParticles
                 indices[i * 6 + 4] = 2 + i * 4;
                 indices[i * 6 + 5] = 3 + i * 4;
             }
-
+            //Переносим данные в буффер для видеокарты.
             indexBuffer.SetData(indices);
             vertexBuffer.SetData(vertex);
+            //Устанавливаем параметры отображения наших объектов           
+       
             base.Initialize();
         }
-
-        /// <summary>
-        /// LoadContent will be called once per game and is the place to load
-        /// all of your content.
-        /// </summary>
+       
         protected override void LoadContent()
         {
             spriteBatch = new SpriteBatch(GraphicsDevice);
@@ -120,29 +102,21 @@ namespace MonoGame3DKezumieParticles
             font = Content.Load<SpriteFont>("font");
             using (FileStream fs = new FileStream("Content/smoke5.png", System.IO.FileMode.Open))
                 texture = Texture2D.FromStream(graphics.GraphicsDevice, fs);
+            effect1.Parameters["Projection"].SetValue(projectionMatrix);
+            effect1.Parameters["Texture"].SetValue(texture);
+            effect1.Parameters["Size"].SetValue(Size);
         }
-
-        /// <summary>
-        /// UnloadContent will be called once per game and is the place to unload
-        /// game-specific content.
-        /// </summary>
+      
         protected override void UnloadContent()
-        {
-            // TODO: Unload any non ContentManager content here
+        {            
             texture.Dispose();
         }
-
-        /// <summary>
-        /// Allows the game to run logic such as updating the world,
-        /// checking for collisions, gathering input, and playing audio.
-        /// </summary>
-        /// <param name="gameTime">Provides a snapshot of timing values.</param>
+               
         protected override void Update(GameTime gameTime)
         {
 
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
-
             time += gameTime.ElapsedGameTime.TotalMilliseconds;
             if (time < 32) return;
             time = 0;
@@ -153,31 +127,7 @@ namespace MonoGame3DKezumieParticles
                 if (particles[i].isMoving)
                 {
                     particles[i].Move(gameTime);
-                }
-
-                //Vector3 pos = particles[i].Vertex[0].Position;
-                //float size = particles[i].Size;
-                //Vector3 ofset0 = new Vector3(0, 0, 0);
-                //Vector3 ofset = new Vector3(size, 0, 0);
-                //Vector3 ofset1 = new Vector3(size, size, 0);
-                //Vector3 ofset2 = new Vector3(0, size, 0);
-                //particles[i].Vertex[0].Position = pos +
-                //(ofset0.X * viewMatrix.Right) + (ofset0.Y * viewMatrix.Up);
-
-                //particles[i].Vertex[1].Position = pos +
-                // (ofset.X * viewMatrix.Right) + (ofset.Y * viewMatrix.Up);
-
-                //particles[i].Vertex[2].Position = pos +
-                // (ofset1.X * viewMatrix.Right) + (ofset1.Y * viewMatrix.Up);
-
-                //particles[i].Vertex[3].Position = pos +
-                //(ofset2.X * viewMatrix.Right) + (ofset2.Y * viewMatrix.Up);
-
-
-
-                //                pos - позиция билборда
-                //pos_offset - смещение вершины, тоже самое что в примере с шейдером
-                //vertex_position = pos + pos_offset.x * right + pos_offset.y * up;
+                }               
                 vertex[i * 4] = particles[i].Vertex[0];
                 vertex[i * 4 + 1] = particles[i].Vertex[1];
                 vertex[i * 4 + 2] = particles[i].Vertex[2];
@@ -185,33 +135,31 @@ namespace MonoGame3DKezumieParticles
             }
             base.Update(gameTime);
         }
-        /// <summary>
-        /// This is called when the game should draw itself.
-        /// </summary>
-        /// <param name="gameTime">Provides a snapshot of timing values.</param>
+      
         protected override void Draw(GameTime gameTime)
         {
             FPS(gameTime);
             vertexBuffer.SetData(vertex);
             graphics.GraphicsDevice.Clear(Color.Black);
             effect1.Parameters["View"].SetValue(viewMatrix);
-            effect1.Parameters["Projection"].SetValue(projectionMatrix);
-            effect1.Parameters["Texture"].SetValue(texture);
+            //В Аддитив режими смешиваються только цвета, прозрачность остаетсья той же
             graphics.GraphicsDevice.BlendState = BlendState.Additive;
-            graphics.GraphicsDevice.RasterizerState = RasterizerState.CullNone;
+            //Сообщаем видеокарте чтобы она не рисовала одно из плоскостей треугольника.
+            graphics.GraphicsDevice.RasterizerState = RasterizerState.CullClockwise;
+            //Линейное сжатие текстуры - она будет сжиматься под соотношение сторо нашего квадрата
             graphics.GraphicsDevice.SamplerStates[0] = SamplerState.LinearClamp;
-            graphics.GraphicsDevice.DepthStencilState = DepthStencilState.DepthRead;
+            //Устанавливаем чтение глубины, без этого больше 2 объектов один за другим не будет видно (остальных закроют передние) ! Обязательно.
+            graphics.GraphicsDevice.DepthStencilState = DepthStencilState.DepthRead; 
+             //Устанавливаем для видеокарты буффер вершин и индексы для него.          
             graphics.GraphicsDevice.SetVertexBuffer(vertexBuffer);
             graphics.GraphicsDevice.Indices = indexBuffer;
-
+            //Включаем наш шейдер
             effect1.CurrentTechnique.Passes[0].Apply();
             graphics.GraphicsDevice.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, vertex.Length, 0, indices.Length / 3);
-
             graphics.GraphicsDevice.DepthStencilState = DepthStencilState.Default;
             spriteBatch.Begin();
             spriteBatch.DrawString(font, "For Nami by Victorem" + s, new Vector2(5, 5), Color.Aqua);
             spriteBatch.End();
-
             base.Draw(gameTime);
         }
         /// <summary>
@@ -264,11 +212,11 @@ namespace MonoGame3DKezumieParticles
                 s += " " + c + " " + t / 1000 + Environment.NewLine;
 
             }
-        }
-
-        //Диапазон координат от -40 до 40
-        //float x = (float)(rnd.NextDouble() - rnd.NextDouble()) * 40;
-        //float y = (float)(rnd.NextDouble() - rnd.NextDouble()) * 40;
-        //float z = (float)(rnd.NextDouble() - rnd.NextDouble()) * 40;
+        }        
     }
 }
+
+//Диапазон координат от -40 до 40
+//float x = (float)(rnd.NextDouble() - rnd.NextDouble()) * 40;
+//float y = (float)(rnd.NextDouble() - rnd.NextDouble()) * 40;
+//float z = (float)(rnd.NextDouble() - rnd.NextDouble()) * 40;
