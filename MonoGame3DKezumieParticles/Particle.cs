@@ -7,33 +7,33 @@ namespace MonoGame3DKezumieParticles
     class Particle
     {
         #region Поля
+        public int[] index = new int[] { 0,1,2,
+        0,2,3};
         float Speed;
         Vector3 Step;
         Vector3 Velocity;
-        Vector3 Position;
+        public Vector3 Position;
         public bool isMoving { get; set; }
-        public Color ColorM;
         public Vector3 StartPosition;
         public Vector3 EndPosition;
-        public float Size { get; set; }     
-        public VertexPositionColor[] Vertex;
+        public float Size { get; set; }
+        public VertexPositionTexture[] Vertex;
         #endregion
 
         public Particle(float speed, Vector3 position)
         {
-            Vertex = new VertexPositionColor[4];
+            Vertex = new VertexPositionTexture[4];
             Speed = speed * 1000;
             StartPosition = position;
             EndPosition = position;
             Size = 1f;
-            ColorM = Color.Orange;           
         }
 
         public void Init()
         {
             Position = StartPosition;
             isMoving = true;
-            Vertex = new VertexPositionColor[12];
+            Vertex = new VertexPositionTexture[4];
             Step = new Vector3(
                 (EndPosition.X - StartPosition.X) / Speed,
                 (EndPosition.Y - StartPosition.Y) / Speed,
@@ -44,10 +44,10 @@ namespace MonoGame3DKezumieParticles
             float Y = StartPosition.Y;
             float Z = StartPosition.Z;
 
-            Vertex[0] = new VertexPositionColor(new Vector3(X, Y, Z), ColorM);
-            Vertex[1] = new VertexPositionColor(new Vector3(X + Size, Y + Size / 6, Z + Size / 6), ColorM);
-            Vertex[2] = new VertexPositionColor(new Vector3(X + Size / 6, Y + Size, Z + Size / 6), ColorM);
-            Vertex[3] = new VertexPositionColor(new Vector3(X + Size / 6, Y + Size / 6, Z + Size), ColorM);
+            Vertex[0] = new VertexPositionTexture(new Vector3(X, Y, Z), new Vector2(0, 0));
+            Vertex[1] = new VertexPositionTexture(new Vector3(X + Size, Y, Z), new Vector2(1, 0));
+            Vertex[2] = new VertexPositionTexture(new Vector3(X + Size, Y + Size, Z), new Vector2(1, 1));
+            Vertex[3] = new VertexPositionTexture(new Vector3(X, Y + Size, Z), new Vector2(0, 1));
         }
 
         public void Move(GameTime time)
@@ -85,10 +85,10 @@ namespace MonoGame3DKezumieParticles
             float Y = Position.Y;
             float Z = Position.Z;
 
-            Vertex[0].Position = Position;
-            Vertex[1].Position = new Vector3(X + Size, Y + Size / 6, Z + Size / 6);
-            Vertex[2].Position = new Vector3(X + Size / 6, Y + Size, Z + Size / 6);
-            Vertex[3].Position = new Vector3(X + Size / 6, Y + Size / 6, Z + Size);
+            Vertex[0].Position = new Vector3(X, Y, Z);
+            Vertex[1].Position = new Vector3(X + Size, Y, Z);
+            Vertex[2].Position = new Vector3(X + Size, Y + Size, Z);
+            Vertex[3].Position = new Vector3(X, Y + Size, Z);
         }
 
     }
