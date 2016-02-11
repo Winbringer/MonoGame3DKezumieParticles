@@ -9,37 +9,31 @@ namespace MonoGame3DKezumieParticles
 {
     public class Game1 : Game
     {
-        #region Поля
-        double time;        
+        #region Поля       
         GraphicsDeviceManager graphics;
         SpriteBatch spriteBatch;
         Effect effect1;
         Particle[] particles;
         VertexPositionTexture[] vertex;
         Matrix projectionMatrix;
-        Matrix viewMatrix;
-        Matrix rotashion = Matrix.Identity;        
-        Matrix translathion = Matrix.Identity;
-        MouseState mouse;
-        MouseState lastMouseState;      
-        float cameraDistance;
-        SpriteFont font;
-        int c;
-        double t;
-        string s;
+        Matrix viewMatrix;      
+        SpriteFont font;       
         DynamicVertexBuffer vertexBuffer;
         IndexBuffer indexBuffer;
         private int[] indices;
         Texture2D texture;
         Vector2 Size;
+        Task task = new Task(()=> { });
         #endregion
-
+        /// <summary>
+        /// Надо сделать точки -1 -1 и тд чтобы от центра шел ебаный шар
+        /// </summary>
         public Game1()
         {
-            particles = new Particle[100000];
+            particles = new Particle[1000000];
             indices = new int[particles.Length * 6];
             vertex = new VertexPositionTexture[particles.Length * 4];
-            Size = new Vector2(1, 1);           
+            Size = new Vector2(0.1f, 0.1f);
             cameraDistance = 100;
             graphics = new GraphicsDeviceManager(this);
             graphics.PreferredBackBufferHeight = 700;
@@ -53,26 +47,26 @@ namespace MonoGame3DKezumieParticles
                  graphics.PreferredBackBufferWidth /
                 (float)graphics.PreferredBackBufferHeight, 1f, 2000);
         }
-  
+
         protected override void Initialize()
         {
             //Создаем буффер индексов и вершин
-            graphics.GraphicsDevice.Flush();           
-            vertexBuffer = new DynamicVertexBuffer(graphics.GraphicsDevice, typeof(VertexPositionTexture), vertex.Length, BufferUsage.WriteOnly);            
+            graphics.GraphicsDevice.Flush();
+            vertexBuffer = new DynamicVertexBuffer(graphics.GraphicsDevice, typeof(VertexPositionTexture), vertex.Length, BufferUsage.WriteOnly);
             indexBuffer = new IndexBuffer(graphics.GraphicsDevice, typeof(int), indices.Length, BufferUsage.WriteOnly);
             //Цикл для заполнения данным массива вершин
             for (int i = 0; i < particles.Length; i++)
             {
                 Random rnd = new Random(i);
                 //Вычисляем позицию частицы в трехмерном пространстве
-                double R = rnd.NextDouble() * 15;
+                double R = rnd.NextDouble() * 20;
                 float sin = (float)(rnd.NextDouble() * 180);
                 float cos = (float)(rnd.NextDouble() * 360);
                 float x = (float)(R * Math.Sin(MathHelper.ToRadians(sin)) * Math.Cos(MathHelper.ToRadians(cos)));
                 float y = (float)(R * Math.Sin(MathHelper.ToRadians(sin)) * Math.Sin(MathHelper.ToRadians(cos)));
                 float z = (float)(R * Math.Cos(MathHelper.ToRadians(sin)));
                 //Создаем частицу с начальными данными
-                particles[i] = new Particle(2, new Vector3(0f, 0f, 0f)) {  EndPosition = new Vector3(x, y, z)};
+                particles[i] = new Particle(2, new Vector3(0f, 0f, 0f)) { EndPosition = new Vector3(x, y, z) };
                 particles[i].Init();
                 //Переносим данные о точках частицы в массив вершин.
                 vertex[i * 4] = particles[i].Vertex[0];
@@ -91,10 +85,10 @@ namespace MonoGame3DKezumieParticles
             indexBuffer.SetData(indices);
             vertexBuffer.SetData(vertex);
             //Устанавливаем параметры отображения наших объектов           
-       
+
             base.Initialize();
         }
-       
+
         protected override void LoadContent()
         {
             spriteBatch = new SpriteBatch(GraphicsDevice);
@@ -105,28 +99,32 @@ namespace MonoGame3DKezumieParticles
             effect1.Parameters["Projection"].SetValue(projectionMatrix);
             effect1.Parameters["Texture"].SetValue(texture);
             effect1.Parameters["Size"].SetValue(Size);
-        }
-      
-        protected override void UnloadContent()
-        {            
-            texture.Dispose();
+            task.Start();
         }
 
-        protected override  void Update(GameTime gameTime)
+        protected override void UnloadContent()
+        {
+            texture.Dispose();
+        }
+        double time;
+        protected override void Update(GameTime gameTime)
         {
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
-            //time += gameTime.ElapsedGameTime.TotalMilliseconds;
-            //if (time < 32) return;
-            //time = 0;
-           MoveAsync(gameTime);
-            CameraMove();           
+            time += gameTime.ElapsedGameTime.TotalMilliseconds;
+           if (time < 32) return;
+            time = 0;
+            
+            task = MoveAsync(gameTime);
+            CameraMove();
             base.Update(gameTime);
         }
 
         protected override void Draw(GameTime gameTime)
         {
             FPS(gameTime);
+            //Ждем завершения асинхронной задачи в которой меняеться позиция вертексов
+            task.Wait();
             vertexBuffer.SetData(vertex);
             graphics.GraphicsDevice.Clear(Color.Black);
             effect1.Parameters["View"].SetValue(viewMatrix);
@@ -137,8 +135,8 @@ namespace MonoGame3DKezumieParticles
             //Линейное сжатие текстуры - она будет сжиматься под соотношение сторо нашего квадрата
             graphics.GraphicsDevice.SamplerStates[0] = SamplerState.LinearClamp;
             //Устанавливаем чтение глубины, без этого больше 2 объектов один за другим не будет видно (остальных закроют передние) ! Обязательно.
-            graphics.GraphicsDevice.DepthStencilState = DepthStencilState.DepthRead; 
-             //Устанавливаем для видеокарты буффер вершин и индексы для него.          
+            graphics.GraphicsDevice.DepthStencilState = DepthStencilState.DepthRead;           
+            //Устанавливаем для видеокарты буффер вершин и индексы для него.          
             graphics.GraphicsDevice.SetVertexBuffer(vertexBuffer);
             graphics.GraphicsDevice.Indices = indexBuffer;
             //Включаем наш шейдер
@@ -153,6 +151,11 @@ namespace MonoGame3DKezumieParticles
         /// <summary>
         /// Метод для передвежения камеры
         /// </summary>
+        Matrix rotashion = Matrix.Identity;
+        Matrix translathion = Matrix.Identity;
+        MouseState mouse;
+        MouseState lastMouseState;
+        float cameraDistance;
         private void CameraMove()
         {
             mouse = Mouse.GetState();
@@ -177,36 +180,41 @@ namespace MonoGame3DKezumieParticles
             //Сохраняем текушее состояние мыши
             lastMouseState = mouse;
         }
-       
+        Object o = new Object();
         Task MoveAsync(GameTime gameTime)
         {
-
             return Task.Factory.StartNew(() =>
               {
-                  for (int i = 0; i < particles.Length; i++)
+                  lock (o)
                   {
-                      if (particles[i].isMoving)
+                      for (int i = 0; i < particles.Length; i++)
                       {
-                          particles[i].Move(gameTime);
-                          vertex[i * 4] = particles[i].Vertex[0];
-                          vertex[i * 4 + 1] = particles[i].Vertex[1];
-                          vertex[i * 4 + 2] = particles[i].Vertex[2];
-                          vertex[i * 4 + 3] = particles[i].Vertex[3];
+                          if (particles[i].isMoving)
+                          {
+                              particles[i].Move(gameTime);
+                              vertex[i * 4] = particles[i].Vertex[0];
+                              vertex[i * 4 + 1] = particles[i].Vertex[1];
+                              vertex[i * 4 + 2] = particles[i].Vertex[2];
+                              vertex[i * 4 + 3] = particles[i].Vertex[3];
+                          }
                       }
-                  }                 
+                  }
               });
         }
 
+        int c;
+        double t;
+        string s;
         private void FPS(GameTime gameTime)
         {
             ++c;
             t += gameTime.ElapsedGameTime.TotalMilliseconds;
-            if (c == 100)
+            if (c == 1000)
             {
                 s += " " + c + " " + t / 1000 + Environment.NewLine;
 
             }
-        }        
+        }
     }
 }
 

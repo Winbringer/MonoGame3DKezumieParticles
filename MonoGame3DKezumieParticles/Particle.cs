@@ -65,9 +65,9 @@ namespace MonoGame3DKezumieParticles
             Position.Y += (float)((Velocity.Y * mult));
             Position.Z += (float)((Velocity.Z * mult));
 
-            if (Math.Abs((EndPosition.X - Position.X)) < Math.Abs(0.01)) Position.X = EndPosition.X;
-            if (Math.Abs((EndPosition.Y - Position.Y)) < Math.Abs(0.01)) Position.Y = EndPosition.Y;
-            if (Math.Abs((EndPosition.Z - Position.Z)) < Math.Abs(0.01)) Position.Z = EndPosition.Z;
+            if (Math.Abs((EndPosition.X - Position.X)) < Math.Abs(0.1)) Position.X = EndPosition.X;
+            if (Math.Abs((EndPosition.Y - Position.Y)) < Math.Abs(0.1)) Position.Y = EndPosition.Y;
+            if (Math.Abs((EndPosition.Z - Position.Z)) < Math.Abs(0.1)) Position.Z = EndPosition.Z;
 
             float X = Position.X;
             float Y = Position.Y;
