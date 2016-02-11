@@ -36,11 +36,11 @@ namespace MonoGame3DKezumieParticles
 
         public Game1()
         {
-            particles = new Particle[10000];
+            particles = new Particle[100000];
             indices = new int[particles.Length * 6];
             vertex = new VertexPositionTexture[particles.Length * 4];
             Size = new Vector2(1, 1);           
-            cameraDistance = 50;
+            cameraDistance = 100;
             graphics = new GraphicsDeviceManager(this);
             graphics.PreferredBackBufferHeight = 700;
             graphics.PreferredBackBufferWidth = 800;
@@ -48,7 +48,7 @@ namespace MonoGame3DKezumieParticles
             Window.Title = "Kezumie";
             IsMouseVisible = true;
             //Создаем матрицы вида, проекции и камеры.
-            viewMatrix = Matrix.CreateLookAt(new Vector3(0, 0, 50), Vector3.Zero, Vector3.Up);
+            viewMatrix = Matrix.CreateLookAt(new Vector3(0, 0, 100), Vector3.Zero, Vector3.Up);
             projectionMatrix = Matrix.CreatePerspectiveFieldOfView(MathHelper.PiOver4,
                  graphics.PreferredBackBufferWidth /
                 (float)graphics.PreferredBackBufferHeight, 1f, 2000);
@@ -111,31 +111,19 @@ namespace MonoGame3DKezumieParticles
         {            
             texture.Dispose();
         }
-               
-        protected override void Update(GameTime gameTime)
-        {
 
+        protected override  void Update(GameTime gameTime)
+        {
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
-            time += gameTime.ElapsedGameTime.TotalMilliseconds;
-            if (time < 32) return;
-            time = 0;
-            //   MoveAsync(particles, gameTime);
-            CameraMove();
-            for (int i = 0; i < particles.Length; i++)
-            {
-                if (particles[i].isMoving)
-                {
-                    particles[i].Move(gameTime);
-                }               
-                vertex[i * 4] = particles[i].Vertex[0];
-                vertex[i * 4 + 1] = particles[i].Vertex[1];
-                vertex[i * 4 + 2] = particles[i].Vertex[2];
-                vertex[i * 4 + 3] = particles[i].Vertex[3];
-            }
+            //time += gameTime.ElapsedGameTime.TotalMilliseconds;
+            //if (time < 32) return;
+            //time = 0;
+           MoveAsync(gameTime);
+            CameraMove();           
             base.Update(gameTime);
         }
-      
+
         protected override void Draw(GameTime gameTime)
         {
             FPS(gameTime);
@@ -190,16 +178,22 @@ namespace MonoGame3DKezumieParticles
             lastMouseState = mouse;
         }
        
-        Task MoveAsync(Particle[] p, GameTime gt)
+        Task MoveAsync(GameTime gameTime)
         {
 
             return Task.Factory.StartNew(() =>
               {
-                  for (int i = 0; i < p.Length; i++)
+                  for (int i = 0; i < particles.Length; i++)
                   {
-                      if (p[i].isMoving) p[i].Move(gt);
-                  }
-
+                      if (particles[i].isMoving)
+                      {
+                          particles[i].Move(gameTime);
+                          vertex[i * 4] = particles[i].Vertex[0];
+                          vertex[i * 4 + 1] = particles[i].Vertex[1];
+                          vertex[i * 4 + 2] = particles[i].Vertex[2];
+                          vertex[i * 4 + 3] = particles[i].Vertex[3];
+                      }
+                  }                 
               });
         }
 
