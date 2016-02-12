@@ -4,7 +4,7 @@ using Microsoft.Xna.Framework.Input;
 using System;
 using System.IO;
 using System.Threading.Tasks;
-
+//Сделать расчит кривыз Безьера
 namespace MonoGame3DKezumieParticles
 {
     public class Game1 : Game
@@ -29,7 +29,7 @@ namespace MonoGame3DKezumieParticles
         {
             particles = new Particle[100000];
             Size = new Vector2(1f, 1f);
-            cameraDistance = 100;
+            cameraDistance = 200;
             indices = new int[particles.Length * 6];
             vertex = new VertexPositionNormalTexture[particles.Length * 4];
             graphics = new GraphicsDeviceManager(this);
@@ -63,8 +63,8 @@ namespace MonoGame3DKezumieParticles
                 float y = (float)(R * Math.Sin(MathHelper.ToRadians(sin)) * Math.Sin(MathHelper.ToRadians(cos)));
                 float z = (float)(R * Math.Cos(MathHelper.ToRadians(sin)));
                 //Создаем частицу с начальными данными
-                particles[i] = new Particle(3, new Vector3(0f, 0f, 0f)) { EndPosition = new Vector3(x, y, z) };
-                particles[i].Init();
+                particles[i] = new Particle(3, new Vector3(x, y, z));
+                particles[i].Init();                
                 //Переносим данные о точках частицы в массив вершин.
                 vertex[i * 4] = particles[i].Vertex[0];
                 vertex[i * 4 + 1] = particles[i].Vertex[1];
@@ -117,20 +117,19 @@ namespace MonoGame3DKezumieParticles
         }
 
         protected override void Draw(GameTime gameTime)
-        {
-           
+        {           
             vertexBuffer.SetData(vertex);
             graphics.GraphicsDevice.Clear(Color.Black);
             effect1.Parameters["View"].SetValue(viewMatrix);
             //В Аддитив режими смешиваються только цвета, прозрачность остаетсья той же
             graphics.GraphicsDevice.BlendState = BlendState.Additive;
-            //Сообщаем видеокарте чтобы она не рисовала одно из плоскостей треугольника.
+            //Сообщаем видеокарте чтобы она не рисовала одну из плоскостей треугольника.
             graphics.GraphicsDevice.RasterizerState = RasterizerState.CullCounterClockwise;
             //Линейное сжатие текстуры - она будет сжиматься под соотношение сторо нашего квадрата
             // graphics.GraphicsDevice.SamplerStates[0] = SamplerState.LinearClamp;
             //Устанавливаем чтение глубины, без этого больше 2 объектов один за другим не будет видно (остальных закроют передние) ! Обязательно.
             graphics.GraphicsDevice.DepthStencilState = DepthStencilState.DepthRead;
-            //Устанавливаем для видеокарты буффер вершин и индексы для него.          
+            //Устанавливаем для видеокарты буффер вершин и индексы для него.             
             graphics.GraphicsDevice.SetVertexBuffer(vertexBuffer);
             graphics.GraphicsDevice.Indices = indexBuffer;
             //Включаем наш шейдер
@@ -145,6 +144,7 @@ namespace MonoGame3DKezumieParticles
             graphics.GraphicsDevice.DepthStencilState = DepthStencilState.Default;
             base.Draw(gameTime);
         }
+
         /// <summary>
         /// Метод для передвежения камеры
         /// </summary>
@@ -167,8 +167,8 @@ namespace MonoGame3DKezumieParticles
             if (mouse.ScrollWheelValue < lastMouseState.ScrollWheelValue) cameraDistance -= 2;
             if (mouse.ScrollWheelValue > lastMouseState.ScrollWheelValue) cameraDistance += 2;
             //Изменяем дистанцию камеры клавиатурой
-            if (Keyboard.GetState().IsKeyDown(Keys.S)) cameraDistance -= 1;
-            if (Keyboard.GetState().IsKeyDown(Keys.W)) cameraDistance += 1;
+            if (Keyboard.GetState().IsKeyDown(Keys.S)) cameraDistance += 1;
+            if (Keyboard.GetState().IsKeyDown(Keys.W)) cameraDistance -= 1;
             //Проверяем не вышла ли камера за дозволенную дистанцию
             if (cameraDistance < 1) cameraDistance = 1;
             if (cameraDistance > 500) cameraDistance = 500;
@@ -218,8 +218,7 @@ namespace MonoGame3DKezumieParticles
         }
     }
 }
-//Ждем завершения асинхронной задачи в которой меняеться позиция вертексов
-//t.Wait();
+
 //Диапазон координат от -40 до 40
 //float x = (float)(rnd.NextDouble() - rnd.NextDouble()) * 40;
 //float y = (float)(rnd.NextDouble() - rnd.NextDouble()) * 40;
