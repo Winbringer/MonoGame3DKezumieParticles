@@ -6,22 +6,19 @@ namespace MonoGame3DKezumieParticles
 {
     class Particle
     {
-        #region Поля
-        public int[] index = new int[] { 0,1,2,
-        0,2,3};
-        float Speed;
-        Vector3 Step;
+        #region Поля        
+        float Speed;        
         Vector3 Velocity;
         public Vector3 Position;
         public bool isMoving { get; set; }
         public Vector3 StartPosition;
         public Vector3 EndPosition;
-        public VertexPositionTexture[] Vertex;
+        public VertexPositionNormalTexture[] Vertex;
         #endregion
 
         public Particle(float speed, Vector3 position)
         {
-            Vertex = new VertexPositionTexture[4];
+            Vertex = new VertexPositionNormalTexture[4];
             Speed = speed * 1000;
             StartPosition = position;
             EndPosition = position;
@@ -31,21 +28,16 @@ namespace MonoGame3DKezumieParticles
         {
             Position = StartPosition;
             isMoving = true;
-            Vertex = new VertexPositionTexture[4];
-            Step = new Vector3(
-                (EndPosition.X - StartPosition.X) / Speed,
-                (EndPosition.Y - StartPosition.Y) / Speed,
-            (EndPosition.Z - StartPosition.Z) / Speed
-            );
+            Vertex = new VertexPositionNormalTexture[4];       
 
             float X = StartPosition.X;
             float Y = StartPosition.Y;
             float Z = StartPosition.Z;
 
-            Vertex[0] = new VertexPositionTexture(new Vector3(X, Y, Z), new Vector2(0, 0));
-            Vertex[1] = new VertexPositionTexture(new Vector3(X, Y, Z), new Vector2(1, 0));
-            Vertex[2] = new VertexPositionTexture(new Vector3(X, Y, Z), new Vector2(1, 1));
-            Vertex[3] = new VertexPositionTexture(new Vector3(X, Y, Z), new Vector2(0, 1));
+            Vertex[0] = new VertexPositionNormalTexture(new Vector3(X, Y, Z),new Vector3(-1,1,1), new Vector2(0, 0));
+            Vertex[1] = new VertexPositionNormalTexture(new Vector3(X, Y, Z),new Vector3(1,1,1), new Vector2(1, 0));
+            Vertex[2] = new VertexPositionNormalTexture(new Vector3(X, Y, Z),new Vector3(1,-1,1), new Vector2(1, 1));
+            Vertex[3] = new VertexPositionNormalTexture(new Vector3(X, Y, Z),new Vector3(-1,-1,1), new Vector2(0, 1));
         }
 
         public void Move(GameTime time)

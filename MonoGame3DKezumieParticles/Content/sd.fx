@@ -16,6 +16,7 @@ struct VertexShaderInput
 {
 	float4 Position :  SV_Position0;
 	float2 TextureCoordinate : TEXCOORD0; 
+	float2 Normal : NORMAL0;
 };
 
 struct VertexShaderOutput
@@ -26,6 +27,7 @@ struct VertexShaderOutput
 
 VertexShaderOutput VertexShaderFunction(VertexShaderInput input)
 {
+	//Делаем так чтобы наш квадрат всегда был лицом к камере.
 	VertexShaderOutput output;
 	//Переводим позицию вертекса в трехмерный вектор.
 	float3 position = input.Position;
@@ -33,7 +35,7 @@ VertexShaderOutput VertexShaderFunction(VertexShaderInput input)
 	// float4(position, 1) - это мировая матрица направленная на 1 по оси Z; Identity матрица. с центром в поции вертекса.
 	float4 viewPosition = mul(float4(position, 1), View); 
 	//Смешаем вертекс по оси X и Y на дистанцию равную размерам квадрата. В соответстви его позии в квадрате (0,0 0,1 1,1 1,0) или ( -1,1 1,1 1, -1, -1,1).
-	viewPosition.xy += input.TextureCoordinate * Size;
+	viewPosition.xy += input.Normal * Size;
 	//Находим позицию вертекса в матрице проекции.
 	output.Position = mul(viewPosition, Projection);
 	//Устанавливаем коодинаты для текстуры вектекса.
