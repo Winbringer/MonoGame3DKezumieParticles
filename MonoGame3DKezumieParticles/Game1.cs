@@ -25,10 +25,9 @@ namespace MonoGame3DKezumieParticles
         Vector2 Size;
         bool isMoving;
         #endregion
-        //Сделать расчит кривыз Безьера
         public Game1()
         {
-            particles = new Particle[200000];
+            particles = new Particle[150000];
             Size = new Vector2(1f, 1f);
             cameraDistance = 500;
             indices = new int[particles.Length * 6];
@@ -59,39 +58,13 @@ namespace MonoGame3DKezumieParticles
             vertexBuffer = new DynamicVertexBuffer(graphics.GraphicsDevice, typeof(VertexPositionNormalTexture), vertex.Length, BufferUsage.WriteOnly);
             indexBuffer = new IndexBuffer(graphics.GraphicsDevice, typeof(int), indices.Length, BufferUsage.WriteOnly);
 
-            //Цикл для заполнения данным массива вершин
-            for (int i = 0; i < particles.Length; i++)
-            {
-                Random rnd = new Random(i);
-                //Вычисляем позицию частицы в трехмерном пространстве
-                double R = rnd.NextDouble() * 500;
-                float sin = (float)(rnd.NextDouble() * 180);
-                float cos = (float)(rnd.NextDouble() * 360);
-                float x = (float)(R * Math.Sin(MathHelper.ToRadians(sin)) * Math.Cos(MathHelper.ToRadians(cos)));
-                float y = (float)(R * Math.Sin(MathHelper.ToRadians(sin)) * Math.Sin(MathHelper.ToRadians(cos)));
-                float z = (float)(R * Math.Cos(MathHelper.ToRadians(sin)));
-                //Создаем частицу с начальными данными
-                particles[i] = new Particle(2, new Vector3(x, y, z));
-                particles[i].Init();
-                //Переносим данные о точках частицы в массив вершин.
-                vertex[i * 4] = particles[i].Vertex[0];
-                vertex[i * 4 + 1] = particles[i].Vertex[1];
-                vertex[i * 4 + 2] = particles[i].Vertex[2];
-                vertex[i * 4 + 3] = particles[i].Vertex[3];
-                //Создаем массив индексов для вершин.
-                indices[i * 6] = 0 + i * 4;
-                indices[i * 6 + 1] = 1 + i * 4;
-                indices[i * 6 + 2] = 2 + i * 4;
-                indices[i * 6 + 3] = 0 + i * 4;
-                indices[i * 6 + 4] = 2 + i * 4;
-                indices[i * 6 + 5] = 3 + i * 4;
-            }
+            CreateVertex();
             //Переносим данные в буффер для видеокарты.
             indexBuffer.SetData(indices);
             vertexBuffer.SetData(vertex);
             //Вызываем иниталайз для базового класса и всех компоненетов, если они у нас есть.
             base.Initialize();
-        }
+        }    
 
         protected override void LoadContent()
         {
@@ -118,103 +91,11 @@ namespace MonoGame3DKezumieParticles
         {
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
-
             if (Keyboard.GetState().IsKeyDown(Keys.Space)) { Ju(); Li(); Ya(); Heart(); isMoving = true; }
             if (isMoving) isMoving = Move(gameTime);
             CameraMove(gameTime);
             base.Update(gameTime);
-        }
-
-        private void Ju()
-        { //0 - 50 000
-            Lane l;
-            l.arStart = 0;
-            l.arEnd =12000;
-            l.start = new Vector2(-80, -25);
-            l.middl = new Vector2(-65, -15);
-            l.end = new Vector2(-50, 25);
-            LaneBezier(l);
-            l.arStart = 12000;
-            l.arEnd = 36000;
-            l.start = new Vector2(-50, -25);
-            l.middl = new Vector2(-50, 15);
-            l.end = new Vector2(0, 25);
-            LaneBezier(l);
-            l.arStart =36000;
-            l.arEnd = 48000;
-            l.start = new Vector2(-50, -25);
-            l.middl = new Vector2(30, -5);
-            l.end = new Vector2(0, 25);
-            LaneBezier(l);
-            l.arStart = 48000;
-            l.arEnd = 50000;
-            l.start = new Vector2(-70, -5);
-            l.middl = new Vector2(-50, -10);
-            l.end = new Vector2(-30, 10);
-            LaneBezier(l);
-        }
-        void Li()
-        {
-            //50 00 75 000
-            Lane l;
-            l.arStart = 50000;
-            l.arEnd = 65000;
-            l.start = new Vector2(0, -10);
-            l.middl = new Vector2(15, -30);
-            l.end = new Vector2(40, 15);
-            LaneBezier(l);
-            l.arStart = 65000;
-            l.arEnd = 75000;
-            l.start = new Vector2(40, 15);
-            l.middl = new Vector2(40, -30);
-            l.end = new Vector2(50, -10);
-            LaneBezier(l);
-        }
-        void Ya()
-        {
-            // 75 000 99999
-            Lane l;
-            l.arStart = 75000;
-            l.arEnd = 80000;
-            l.start = new Vector2(50, -10);
-            l.middl = new Vector2(65, -30);
-            l.end = new Vector2(80, 0);
-            LaneBezier(l);
-            l.arStart = 80000;
-            l.arEnd = 85000;
-            l.start = new Vector2(80, 0);
-            l.middl = new Vector2(70, 20);
-            l.end = new Vector2(60, 0);
-            LaneBezier(l);
-            l.arStart = 85000;
-            l.arEnd = 90000;
-            l.start = new Vector2(60, 0);
-            l.middl = new Vector2(75, -20);
-            l.end = new Vector2(85, 0);
-            LaneBezier(l);
-            l.arStart = 90000;
-            l.arEnd = 95000;
-            l.start = new Vector2(80, 0);
-            l.middl = new Vector2(70, -30);
-            l.end = new Vector2(90, -15);
-            LaneBezier(l);
-        }
-        void Heart()
-        {
-            Lane l;
-            l.arStart = 95000;
-            l.arEnd = 100000;
-            l.start = new Vector2(0, 60);
-            l.middl = new Vector2(280, 180);
-            l.end = new Vector2(0, -150);
-            LaneBezier(l);
-            l.arStart = 100000;
-            l.arEnd = 105000;
-            l.start = new Vector2(0, 60);
-            l.middl = new Vector2(-280, 180);
-            l.end = new Vector2(0, -150);
-            LaneBezier(l);
-        }
+        }     
 
         string s = "";
         double t = 0;
@@ -247,50 +128,204 @@ namespace MonoGame3DKezumieParticles
         #endregion
 
         #region Вспомогательные методы
-
+        /// <summary>
+        /// Метод для рисования буквы "Ю".
+        /// </summary>
+        private void Ju()
+        { //0 - 50 000
+            Lane l;
+            l.arStart = 0;
+            l.arEnd = 12000;
+            l.start = new Vector2(-80, -25);
+            l.middl = new Vector2(-65, -15);
+            l.end = new Vector2(-50, 25);
+            LaneBezier(l);
+            l.arStart = 12000;
+            l.arEnd = 36000;
+            l.start = new Vector2(-50, -25);
+            l.middl = new Vector2(-50, 15);
+            l.end = new Vector2(0, 25);
+            LaneBezier(l);
+            l.arStart = 36000;
+            l.arEnd = 48000;
+            l.start = new Vector2(-50, -25);
+            l.middl = new Vector2(30, -5);
+            l.end = new Vector2(0, 25);
+            LaneBezier(l);
+            l.arStart = 48000;
+            l.arEnd = 50000;
+            l.start = new Vector2(-70, -5);
+            l.middl = new Vector2(-50, -10);
+            l.end = new Vector2(-30, 10);
+            LaneBezier(l);
+        }
+        /// <summary>
+        /// Метод для рисования буквы "л".
+        /// </summary>
+        void Li()
+        {
+            //50 00 75 000
+            Lane l;
+            l.arStart = 50000;
+            l.arEnd = 65000;
+            l.start = new Vector2(0, -10);
+            l.middl = new Vector2(15, -30);
+            l.end = new Vector2(40, 15);
+            LaneBezier(l);
+            l.arStart = 65000;
+            l.arEnd = 75000;
+            l.start = new Vector2(40, 15);
+            l.middl = new Vector2(40, -30);
+            l.end = new Vector2(50, -10);
+            LaneBezier(l);
+        }
+        /// <summary>
+        /// Метод для рисования буквы "я".
+        /// </summary>
+        void Ya()
+        {
+            // 75 000 99999
+            Lane l;
+            l.arStart = 75000;
+            l.arEnd = 80000;
+            l.start = new Vector2(50, -10);
+            l.middl = new Vector2(65, -30);
+            l.end = new Vector2(80, 0);
+            LaneBezier(l);
+            l.arStart = 80000;
+            l.arEnd = 85000;
+            l.start = new Vector2(80, 0);
+            l.middl = new Vector2(70, 20);
+            l.end = new Vector2(60, 0);
+            LaneBezier(l);
+            l.arStart = 85000;
+            l.arEnd = 90000;
+            l.start = new Vector2(60, 0);
+            l.middl = new Vector2(75, -20);
+            l.end = new Vector2(85, 0);
+            LaneBezier(l);
+            l.arStart = 90000;
+            l.arEnd = 95000;
+            l.start = new Vector2(80, 0);
+            l.middl = new Vector2(70, -30);
+            l.end = new Vector2(90, -15);
+            LaneBezier(l);
+        }
+        /// <summary>
+        /// Метод для рисования сердца
+        /// </summary>
+        void Heart()
+        {
+            Lane l;
+            l.arStart = 95000;
+            l.arEnd = 115000;
+            l.start = new Vector2(0, 60);
+            l.middl = new Vector2(280, 180);
+            l.end = new Vector2(0, -150);
+            LaneBezier(l);
+            l.arStart = 115000;
+            l.arEnd = 135000;
+            l.start = new Vector2(0, 60);
+            l.middl = new Vector2(-280, 180);
+            l.end = new Vector2(0, -150);
+            LaneBezier(l);
+        }
+        /// <summary>
+        /// Метод для создания вершин наших частиц.
+        /// </summary>
+        private void CreateVertex()
+        {
+            //Цикл для заполнения данным массива вершин
+            for (int i = 0; i < particles.Length; i++)
+            {
+                Random rnd = new Random(i);
+                //Вычисляем позицию частицы в трехмерном пространстве
+                double R = rnd.NextDouble() * 500;
+                float sin = (float)(rnd.NextDouble() * 180);
+                float cos = (float)(rnd.NextDouble() * 360);
+                float x = (float)(R * Math.Sin(MathHelper.ToRadians(sin)) * Math.Cos(MathHelper.ToRadians(cos)));
+                float y = (float)(R * Math.Sin(MathHelper.ToRadians(sin)) * Math.Sin(MathHelper.ToRadians(cos)));
+                float z = (float)(R * Math.Cos(MathHelper.ToRadians(sin)));
+                //Создаем частицу с начальными данными
+                particles[i] = new Particle(2, new Vector3(x, y, z));                
+                //Переносим данные о точках частицы в массив вершин.
+                vertex[i * 4] = particles[i].Vertex[0];
+                vertex[i * 4 + 1] = particles[i].Vertex[1];
+                vertex[i * 4 + 2] = particles[i].Vertex[2];
+                vertex[i * 4 + 3] = particles[i].Vertex[3];
+                //Создаем массив индексов для вершин.
+                indices[i * 6] = 0 + i * 4;
+                indices[i * 6 + 1] = 1 + i * 4;
+                indices[i * 6 + 2] = 2 + i * 4;
+                indices[i * 6 + 3] = 0 + i * 4;
+                indices[i * 6 + 4] = 2 + i * 4;
+                indices[i * 6 + 5] = 3 + i * 4;
+            }
+        }
+        /// <summary>
+        /// Метод для нахождения координаты на кривой Безье
+        /// </summary>
+        /// <param name="P">Начальная точка из которой идет линия</param>
+        /// <param name="P1">Серединная точка которая оттягивает линию в свою строну</param>
+        /// <param name="P2">Конечная точка на которой заканчиваеться линия</param>
+        /// <param name="t">Доля от общей длины линии на которой находиться наша точка. От 0 до 1 включительно</param>
+        /// <returns></returns>
         double BezierMy(double P, double P1, double P2, double t)
         {
             if (t < 0 || t > 1) throw new ArgumentOutOfRangeException("t должен лежать в диапазоне от 0 до 1 включительно");
             double t0 = 1 - t;
             return Math.Pow(t0, 2) * P + 2 * t0 * t * P1 + Math.Pow(t, 2) * P2;
         }
+        /// <summary>
+        /// Рисуют линию безье из частиц
+        /// </summary>
+        /// <param name="lane">Структура содержщая данны о линии которую надо нарисовать.</param>
         void LaneBezier(Lane lane)
         {
             double step = 1d / (lane.arEnd - lane.arStart + 1);
             double t = 0;
-            
+
             for (int i = lane.arStart; i < lane.arEnd + 1; i++)
             {
                 Random rnd = new Random(i);
                 float x = (float)BezierMy(lane.start.X, lane.middl.X, lane.end.X, t);
                 float y = (float)BezierMy(lane.start.Y, lane.middl.Y, lane.end.Y, t);
                 float z = 0;
-                x = (float)(rnd.NextDouble() - rnd.NextDouble())*10 + x;               
-                 z = (float)(rnd.NextDouble() - rnd.NextDouble())*10;
+                x = (float)(rnd.NextDouble() - rnd.NextDouble()) * 5 + x;
+                z = (float)(rnd.NextDouble() - rnd.NextDouble()) * 20;
+                y = (float)(rnd.NextDouble() - rnd.NextDouble()) * 5 + y;
                 particles[i].EndPosition = new Vector3(x, y, z);
                 particles[i].isMoving = true;
                 t += step;
             }
         }
+        /// <summary>
+        /// Рисует текст на мониторе.
+        /// </summary>
         private void DrawString()
         {
             //Пишем на экране текст.
             spriteBatch.Begin();
             spriteBatch.DrawString(font,
-                "For Nami by Victorem. " + s + Environment.NewLine + "Use arrows on the keyboard and mouse wheel to move the camera",
+                "For Nami by Victorem. " + s +
+                Environment.NewLine +
+                "Use arrows on keyboard and mouse wheel to move camera" +
+                Environment.NewLine +
+                "Press space to start animation",
                 new Vector2(5, 5), Color.Red);
             spriteBatch.End();
             graphics.GraphicsDevice.DepthStencilState = DepthStencilState.Default;
         }
-
-        /// <summary>
-        /// Метод для передвежения камеры
-        /// </summary>
+        
         Matrix rotashion = Matrix.Identity;
         Matrix translathion = Matrix.Identity;
         MouseState mouse;
         MouseState lastMouseState;
         float cameraDistance;
+        /// <summary>
+        /// Метод для передвижения времени.
+        /// </summary>
+        /// <param name="gameTime">Количество времени необходимое для расчета скорости передвежения</param>
         private void CameraMove(GameTime gameTime)
         {
             //Скорость поворота расчитываемая в зависимости от времени.
@@ -320,17 +355,23 @@ namespace MonoGame3DKezumieParticles
             lastMouseState = mouse;
         }
         Object o = new Object();
+        /// <summary>
+        /// Асинхронный метод для двежения частиц.
+        /// </summary>
+        /// <param name="gameTime">Количество времени необходимое для расчета скорости передвежения</param>
+        /// <returns></returns>
         Task MoveAsync(GameTime gameTime)
         {
             return Task.Factory.StartNew(() =>
               {
+                  double time = gameTime.ElapsedGameTime.TotalMilliseconds;
                   for (int i = 0; i < particles.Length; i++)
                   {
                       lock (o)
                       {
                           if (particles[i].isMoving)
                           {
-                              particles[i].Move(gameTime);
+                              particles[i].Move(time);
                               vertex[i * 4] = particles[i].Vertex[0];
                               vertex[i * 4 + 1] = particles[i].Vertex[1];
                               vertex[i * 4 + 2] = particles[i].Vertex[2];
@@ -340,9 +381,15 @@ namespace MonoGame3DKezumieParticles
                   }
               });
         }
+        /// <summary>
+        /// Метод для передвижения частицы.
+        /// </summary>
+        /// <param name="gameTime">Количество времени необходимое для расчета скорости передвежения</param>
+        /// <returns>Есть ли еще частицы которые не завершили свое движение</returns>
         bool Move(GameTime gameTime)
         {
             int j = 0;
+            double time = gameTime.ElapsedGameTime.TotalMilliseconds;
             for (int i = 0; i < particles.Length; i++)
             {
                 if (particles[i].isMoving)
@@ -350,7 +397,7 @@ namespace MonoGame3DKezumieParticles
                     if (particles[i].isMoving)
                     {
                         ++j;
-                        particles[i].Move(gameTime);
+                        particles[i].Move(time);
                         vertex[i * 4] = particles[i].Vertex[0];
                         vertex[i * 4 + 1] = particles[i].Vertex[1];
                         vertex[i * 4 + 2] = particles[i].Vertex[2];
@@ -374,8 +421,3 @@ namespace MonoGame3DKezumieParticles
         public int arEnd;
     }
 }
-
-//Диапазон координат от -40 до 40
-//float x = (float)(rnd.NextDouble() - rnd.NextDouble()) * 40;
-//float y = (float)(rnd.NextDouble() - rnd.NextDouble()) * 40;
-//float z = (float)(rnd.NextDouble() - rnd.NextDouble()) * 40;
