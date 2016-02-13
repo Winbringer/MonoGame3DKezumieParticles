@@ -258,11 +258,15 @@ namespace MonoGame3DKezumieParticles
         {
             double step = 1d / (lane.arEnd - lane.arStart + 1);
             double t = 0;
+            
             for (int i = lane.arStart; i < lane.arEnd + 1; i++)
             {
+                Random rnd = new Random(i);
                 float x = (float)BezierMy(lane.start.X, lane.middl.X, lane.end.X, t);
                 float y = (float)BezierMy(lane.start.Y, lane.middl.Y, lane.end.Y, t);
                 float z = 0;
+                x = (float)(rnd.NextDouble() - rnd.NextDouble())*10 + x;               
+                 z = (float)(rnd.NextDouble() - rnd.NextDouble())*10;
                 particles[i].EndPosition = new Vector3(x, y, z);
                 particles[i].isMoving = true;
                 t += step;
