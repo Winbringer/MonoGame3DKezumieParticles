@@ -23,11 +23,12 @@ namespace MonoGame3DKezumieParticles
         private int[] indices;
         Texture2D texture;
         Vector2 Size;
+        bool isMoving;
         #endregion
         //Сделать расчит кривыз Безьера
         public Game1()
         {
-            particles = new Particle[100000];
+            particles = new Particle[1000000];
             Size = new Vector2(1f, 1f);
             cameraDistance = 500;
             indices = new int[particles.Length * 6];
@@ -35,9 +36,13 @@ namespace MonoGame3DKezumieParticles
             graphics = new GraphicsDeviceManager(this);
             graphics.PreferredBackBufferHeight = 700;
             graphics.PreferredBackBufferWidth = 800;
+            //Убераем ограничения на частоту вызова метода Update и Draw  
+            graphics.SynchronizeWithVerticalRetrace = false;
+            IsFixedTimeStep = false;
             Content.RootDirectory = "Content";
             Window.Title = "Kezumie";
             IsMouseVisible = true;
+            isMoving = true;
             //Создаем матрицы вида, проекции и камеры.
             viewMatrix = Matrix.CreateLookAt(new Vector3(0, 0, cameraDistance), Vector3.Zero, Vector3.Up);
             projectionMatrix = Matrix.CreatePerspectiveFieldOfView(MathHelper.PiOver4,
@@ -81,13 +86,9 @@ namespace MonoGame3DKezumieParticles
             }
             //Переносим данные в буффер для видеокарты.
             indexBuffer.SetData(indices);
-            vertexBuffer.SetData(vertex);
-            //Убераем ограничения на частоту вызова метода Update и Draw  
-            graphics.SynchronizeWithVerticalRetrace = false;
-            IsFixedTimeStep = false;
+            vertexBuffer.SetData(vertex);            
             //Вызываем иниталайз для базового класса и всех компоненетов, если они у нас есть.
-            base.Initialize();
-           
+            base.Initialize();           
         }
 
         protected override void LoadContent()
@@ -109,18 +110,23 @@ namespace MonoGame3DKezumieParticles
         #endregion
 
         #region Обновление данных и отображение их на экран
-        double time;
+       
         protected override void Update(GameTime gameTime)
         {
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();           
-                Move(gameTime);            
+             if(isMoving) isMoving = Move(gameTime);            
             CameraMove(gameTime);
             base.Update(gameTime);
         }
-
+        string s ="";
+        double t=0;
+       double f=0;
         protected override void Draw(GameTime gameTime)
         {
+            ++f;
+            t += gameTime.ElapsedGameTime.TotalMilliseconds;
+            if (f > 100) { s = "fps: " + Convert.ToInt32((f / t) * 1000); f = 0; t = 0; }
             vertexBuffer.SetData(vertex);
             graphics.GraphicsDevice.Clear(Color.Black);
             effect1.Parameters["View"].SetValue(viewMatrix);
@@ -138,18 +144,23 @@ namespace MonoGame3DKezumieParticles
             //Включаем наш шейдер
             effect1.CurrentTechnique.Passes[0].Apply();
             graphics.GraphicsDevice.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, vertex.Length, 0, indices.Length / 3);
-            //Пишем на экране текст.
-            spriteBatch.Begin();
-            spriteBatch.DrawString(font,
-                "For Nami by Victorem." + Environment.NewLine + "Use arrows on the keyboard and mouse wheel to move the camera",
-                new Vector2(5, 5), Color.Red);
-            spriteBatch.End();
-            graphics.GraphicsDevice.DepthStencilState = DepthStencilState.Default;
+            DrawString();
             base.Draw(gameTime);
         }
         #endregion
 
         #region Вспомогательные методы
+        private void DrawString()
+        {
+            //Пишем на экране текст.
+            spriteBatch.Begin();
+            spriteBatch.DrawString(font,
+                "For Nami by Victorem. " + s + Environment.NewLine + "Use arrows on the keyboard and mouse wheel to move the camera",
+                new Vector2(5, 5), Color.Red);
+            spriteBatch.End();
+            graphics.GraphicsDevice.DepthStencilState = DepthStencilState.Default;
+        }
+
         /// <summary>
         /// Метод для передвежения камеры
         /// </summary>
@@ -207,14 +218,16 @@ namespace MonoGame3DKezumieParticles
                   }
               });
         }
-        void Move(GameTime gameTime)
+        bool Move(GameTime gameTime)
         {
+            int j=0;
             for (int i = 0; i < particles.Length; i++)
             {
                 if (particles[i].isMoving)
                 {
                     if (particles[i].isMoving)
                     {
+                        ++j;
                         particles[i].Move(gameTime);
                         vertex[i * 4] = particles[i].Vertex[0];
                         vertex[i * 4 + 1] = particles[i].Vertex[1];
@@ -223,6 +236,8 @@ namespace MonoGame3DKezumieParticles
                     }
                 }
             }
+            if (j > 50) return true;
+            return false;
 
         }
         #endregion
