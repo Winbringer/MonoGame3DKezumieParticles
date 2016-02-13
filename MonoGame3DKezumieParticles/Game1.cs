@@ -39,9 +39,9 @@ namespace MonoGame3DKezumieParticles
 
         public Game1()
         {
-            particles = new Particle[150000];
+            particles = new Particle[200000];
             Size = new Vector2(1f, 1f);
-            cameraDistance = 500;
+            cameraDistance = 400;
             indices = new int[particles.Length * 6];
             vertex = new VertexPositionNormalTexture[particles.Length * 4];
             graphics = new GraphicsDeviceManager(this);
@@ -137,7 +137,7 @@ namespace MonoGame3DKezumieParticles
         {
             ++f;
             t += gameTime.ElapsedGameTime.TotalMilliseconds;
-            if (f > 100) { s = "fps: " + Convert.ToInt32((f / t) * 1000); f = 0; t = 0; }
+            if (f > 100) { s = "Fps: " + Convert.ToInt32((f / t) * 1000); f = 0; t = 0; }
             vertexBuffer.SetData(vertex);
             graphics.GraphicsDevice.Clear(Color.Black);
             effect1.Parameters["View"].SetValue(viewMatrix);
