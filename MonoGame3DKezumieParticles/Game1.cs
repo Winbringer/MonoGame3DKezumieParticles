@@ -26,10 +26,10 @@ namespace MonoGame3DKezumieParticles
         #endregion
         //Сделать расчит кривыз Безьера
         public Game1()
-        {           
+        {
             particles = new Particle[100000];
             Size = new Vector2(1f, 1f);
-            cameraDistance = 200;
+            cameraDistance = 500;
             indices = new int[particles.Length * 6];
             vertex = new VertexPositionNormalTexture[particles.Length * 4];
             graphics = new GraphicsDeviceManager(this);
@@ -65,7 +65,7 @@ namespace MonoGame3DKezumieParticles
                 float z = (float)(R * Math.Cos(MathHelper.ToRadians(sin)));
                 //Создаем частицу с начальными данными
                 particles[i] = new Particle(3, new Vector3(0, 0, 0)) { EndPosition = new Vector3(x, y, z) };
-                particles[i].Init();                
+                particles[i].Init();
                 //Переносим данные о точках частицы в массив вершин.
                 vertex[i * 4] = particles[i].Vertex[0];
                 vertex[i * 4 + 1] = particles[i].Vertex[1];
@@ -82,8 +82,12 @@ namespace MonoGame3DKezumieParticles
             //Переносим данные в буффер для видеокарты.
             indexBuffer.SetData(indices);
             vertexBuffer.SetData(vertex);
-            //Устанавливаем параметры отображения наших объектов   
+            //Убераем ограничения на частоту вызова метода Update и Draw  
+            graphics.SynchronizeWithVerticalRetrace = false;
+            IsFixedTimeStep = false;
+            //Вызываем иниталайз для базового класса и всех компоненетов, если они у нас есть.
             base.Initialize();
+           
         }
 
         protected override void LoadContent()
@@ -95,7 +99,7 @@ namespace MonoGame3DKezumieParticles
                 texture = Texture2D.FromStream(graphics.GraphicsDevice, fs);
             effect1.Parameters["Projection"].SetValue(projectionMatrix);
             effect1.Parameters["Texture"].SetValue(texture);
-            effect1.Parameters["Size"].SetValue(Size);        
+            effect1.Parameters["Size"].SetValue(Size);
         }
 
         protected override void UnloadContent()
@@ -107,21 +111,16 @@ namespace MonoGame3DKezumieParticles
         #region Обновление данных и отображение их на экран
         double time;
         protected override void Update(GameTime gameTime)
-        {           
+        {
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
-                Exit();
-            time += gameTime.ElapsedGameTime.TotalMilliseconds;
-            if (time > 48)
-            {
-                Move(gameTime);
-                time = 0;
-            }       
-            CameraMove();
+                Exit();           
+                Move(gameTime);            
+            CameraMove(gameTime);
             base.Update(gameTime);
         }
 
         protected override void Draw(GameTime gameTime)
-        {           
+        {
             vertexBuffer.SetData(vertex);
             graphics.GraphicsDevice.Clear(Color.Black);
             effect1.Parameters["View"].SetValue(viewMatrix);
@@ -142,7 +141,7 @@ namespace MonoGame3DKezumieParticles
             //Пишем на экране текст.
             spriteBatch.Begin();
             spriteBatch.DrawString(font,
-                "For Nami by Victorem."+Environment.NewLine+ "Use arrows on the keyboard and mouse wheel to move the camera",
+                "For Nami by Victorem." + Environment.NewLine + "Use arrows on the keyboard and mouse wheel to move the camera",
                 new Vector2(5, 5), Color.Red);
             spriteBatch.End();
             graphics.GraphicsDevice.DepthStencilState = DepthStencilState.Default;
@@ -159,22 +158,26 @@ namespace MonoGame3DKezumieParticles
         MouseState mouse;
         MouseState lastMouseState;
         float cameraDistance;
-        private void CameraMove()
+        private void CameraMove(GameTime gameTime)
         {
+            //Скорость поворота расчитываемая в зависимости от времени.
+            float r =(float)( 0.1 * gameTime.ElapsedGameTime.TotalMilliseconds);
+            //Скорость поворота в радианах.
+            float pi = MathHelper.ToRadians(r);
             mouse = Mouse.GetState();
             //Врашаем камеру вокруг нулевых кордианат
-            if (Keyboard.GetState().IsKeyDown(Keys.Left)) rotashion *= Matrix.CreateRotationY(-1 * MathHelper.ToRadians(1));
-            if (Keyboard.GetState().IsKeyDown(Keys.Right)) rotashion *= Matrix.CreateRotationY(MathHelper.ToRadians(1));
-            if (Keyboard.GetState().IsKeyDown(Keys.Up)) rotashion *= Matrix.CreateRotationX(-1 * MathHelper.ToRadians(1));
-            if (Keyboard.GetState().IsKeyDown(Keys.Down)) rotashion *= Matrix.CreateRotationX(MathHelper.ToRadians(1));
-            if (Keyboard.GetState().IsKeyDown(Keys.A)) rotashion *= Matrix.CreateRotationZ(-1 * MathHelper.ToRadians(1));
-            if (Keyboard.GetState().IsKeyDown(Keys.D)) rotashion *= Matrix.CreateRotationZ(MathHelper.ToRadians(1));
+            if (Keyboard.GetState().IsKeyDown(Keys.Left)) rotashion *= Matrix.CreateRotationY(-1 *pi);
+            if (Keyboard.GetState().IsKeyDown(Keys.Right)) rotashion *= Matrix.CreateRotationY(pi);
+            if (Keyboard.GetState().IsKeyDown(Keys.Up)) rotashion *= Matrix.CreateRotationX(-1 * pi);
+            if (Keyboard.GetState().IsKeyDown(Keys.Down)) rotashion *= Matrix.CreateRotationX(pi);
+            if (Keyboard.GetState().IsKeyDown(Keys.A)) rotashion *= Matrix.CreateRotationZ(-1 * pi);
+            if (Keyboard.GetState().IsKeyDown(Keys.D)) rotashion *= Matrix.CreateRotationZ(pi);
             //Изменяем дистанцию камеры колесиком мыши
-            if (mouse.ScrollWheelValue < lastMouseState.ScrollWheelValue) cameraDistance -= 2;
-            if (mouse.ScrollWheelValue > lastMouseState.ScrollWheelValue) cameraDistance += 2;
+            if (mouse.ScrollWheelValue < lastMouseState.ScrollWheelValue) cameraDistance -= 4*r;
+            if (mouse.ScrollWheelValue > lastMouseState.ScrollWheelValue) cameraDistance += 4*r;
             //Изменяем дистанцию камеры клавиатурой
-            if (Keyboard.GetState().IsKeyDown(Keys.S)) cameraDistance += 1;
-            if (Keyboard.GetState().IsKeyDown(Keys.W)) cameraDistance -= 1;
+            if (Keyboard.GetState().IsKeyDown(Keys.S)) cameraDistance += r;
+            if (Keyboard.GetState().IsKeyDown(Keys.W)) cameraDistance -= r;
             //Проверяем не вышла ли камера за дозволенную дистанцию
             if (cameraDistance < 1) cameraDistance = 1;
             if (cameraDistance > 500) cameraDistance = 500;
