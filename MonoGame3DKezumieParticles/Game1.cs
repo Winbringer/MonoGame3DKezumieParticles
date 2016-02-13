@@ -28,7 +28,7 @@ namespace MonoGame3DKezumieParticles
         //Сделать расчит кривыз Безьера
         public Game1()
         {
-            particles = new Particle[1000000];
+            particles = new Particle[200000];
             Size = new Vector2(1f, 1f);
             cameraDistance = 500;
             indices = new int[particles.Length * 6];
@@ -47,29 +47,31 @@ namespace MonoGame3DKezumieParticles
             viewMatrix = Matrix.CreateLookAt(new Vector3(0, 0, cameraDistance), Vector3.Zero, Vector3.Up);
             projectionMatrix = Matrix.CreatePerspectiveFieldOfView(MathHelper.PiOver4,
                  graphics.PreferredBackBufferWidth /
-                (float)graphics.PreferredBackBufferHeight, 1f, 550);
+                (float)graphics.PreferredBackBufferHeight, 1f, 700);
         }
 
         #region Инициализация и загрузка начальных данных
+
         protected override void Initialize()
         {
             //Создаем буффер индексов и вершин
             graphics.GraphicsDevice.Flush();
             vertexBuffer = new DynamicVertexBuffer(graphics.GraphicsDevice, typeof(VertexPositionNormalTexture), vertex.Length, BufferUsage.WriteOnly);
             indexBuffer = new IndexBuffer(graphics.GraphicsDevice, typeof(int), indices.Length, BufferUsage.WriteOnly);
+
             //Цикл для заполнения данным массива вершин
             for (int i = 0; i < particles.Length; i++)
             {
                 Random rnd = new Random(i);
                 //Вычисляем позицию частицы в трехмерном пространстве
-                double R = rnd.NextDouble() * 100;
+                double R = rnd.NextDouble() * 500;
                 float sin = (float)(rnd.NextDouble() * 180);
                 float cos = (float)(rnd.NextDouble() * 360);
                 float x = (float)(R * Math.Sin(MathHelper.ToRadians(sin)) * Math.Cos(MathHelper.ToRadians(cos)));
                 float y = (float)(R * Math.Sin(MathHelper.ToRadians(sin)) * Math.Sin(MathHelper.ToRadians(cos)));
                 float z = (float)(R * Math.Cos(MathHelper.ToRadians(sin)));
                 //Создаем частицу с начальными данными
-                particles[i] = new Particle(3, new Vector3(0, 0, 0)) { EndPosition = new Vector3(x, y, z) };
+                particles[i] = new Particle(2, new Vector3(x, y, z));
                 particles[i].Init();
                 //Переносим данные о точках частицы в массив вершин.
                 vertex[i * 4] = particles[i].Vertex[0];
@@ -86,9 +88,9 @@ namespace MonoGame3DKezumieParticles
             }
             //Переносим данные в буффер для видеокарты.
             indexBuffer.SetData(indices);
-            vertexBuffer.SetData(vertex);            
+            vertexBuffer.SetData(vertex);
             //Вызываем иниталайз для базового класса и всех компоненетов, если они у нас есть.
-            base.Initialize();           
+            base.Initialize();
         }
 
         protected override void LoadContent()
@@ -107,21 +109,116 @@ namespace MonoGame3DKezumieParticles
         {
             texture.Dispose();
         }
+
         #endregion
 
         #region Обновление данных и отображение их на экран
-       
+
         protected override void Update(GameTime gameTime)
         {
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
-                Exit();           
-             if(isMoving) isMoving = Move(gameTime);            
+                Exit();
+
+            if (Keyboard.GetState().IsKeyDown(Keys.Space)) { Ju(); Li(); Ya(); Heart(); isMoving = true; }
+            if (isMoving) isMoving = Move(gameTime);
             CameraMove(gameTime);
             base.Update(gameTime);
         }
-        string s ="";
-        double t=0;
-       double f=0;
+
+        private void Ju()
+        { //0 - 50 000
+            Lane l;
+            l.arStart = 0;
+            l.arEnd =12000;
+            l.start = new Vector2(-80, -25);
+            l.middl = new Vector2(-65, -15);
+            l.end = new Vector2(-50, 25);
+            LaneBezier(l);
+            l.arStart = 12000;
+            l.arEnd = 36000;
+            l.start = new Vector2(-50, -25);
+            l.middl = new Vector2(-50, 15);
+            l.end = new Vector2(0, 25);
+            LaneBezier(l);
+            l.arStart =36000;
+            l.arEnd = 48000;
+            l.start = new Vector2(-50, -25);
+            l.middl = new Vector2(30, -5);
+            l.end = new Vector2(0, 25);
+            LaneBezier(l);
+            l.arStart = 48000;
+            l.arEnd = 50000;
+            l.start = new Vector2(-70, -5);
+            l.middl = new Vector2(-50, -10);
+            l.end = new Vector2(-30, 10);
+            LaneBezier(l);
+        }
+        void Li()
+        {
+            //50 00 75 000
+            Lane l;
+            l.arStart = 50000;
+            l.arEnd = 65000;
+            l.start = new Vector2(0, -10);
+            l.middl = new Vector2(15, -30);
+            l.end = new Vector2(40, 15);
+            LaneBezier(l);
+            l.arStart = 65000;
+            l.arEnd = 75000;
+            l.start = new Vector2(40, 15);
+            l.middl = new Vector2(40, -30);
+            l.end = new Vector2(50, -10);
+            LaneBezier(l);
+        }
+        void Ya()
+        {
+            // 75 000 99999
+            Lane l;
+            l.arStart = 75000;
+            l.arEnd = 80000;
+            l.start = new Vector2(50, -10);
+            l.middl = new Vector2(65, -30);
+            l.end = new Vector2(80, 0);
+            LaneBezier(l);
+            l.arStart = 80000;
+            l.arEnd = 85000;
+            l.start = new Vector2(80, 0);
+            l.middl = new Vector2(70, 20);
+            l.end = new Vector2(60, 0);
+            LaneBezier(l);
+            l.arStart = 85000;
+            l.arEnd = 90000;
+            l.start = new Vector2(60, 0);
+            l.middl = new Vector2(75, -20);
+            l.end = new Vector2(85, 0);
+            LaneBezier(l);
+            l.arStart = 90000;
+            l.arEnd = 95000;
+            l.start = new Vector2(80, 0);
+            l.middl = new Vector2(70, -30);
+            l.end = new Vector2(90, -15);
+            LaneBezier(l);
+        }
+        void Heart()
+        {
+            Lane l;
+            l.arStart = 95000;
+            l.arEnd = 100000;
+            l.start = new Vector2(0, 60);
+            l.middl = new Vector2(280, 180);
+            l.end = new Vector2(0, -150);
+            LaneBezier(l);
+            l.arStart = 100000;
+            l.arEnd = 105000;
+            l.start = new Vector2(0, 60);
+            l.middl = new Vector2(-280, 180);
+            l.end = new Vector2(0, -150);
+            LaneBezier(l);
+        }
+
+        string s = "";
+        double t = 0;
+        double f = 0;
         protected override void Draw(GameTime gameTime)
         {
             ++f;
@@ -150,6 +247,27 @@ namespace MonoGame3DKezumieParticles
         #endregion
 
         #region Вспомогательные методы
+
+        double BezierMy(double P, double P1, double P2, double t)
+        {
+            if (t < 0 || t > 1) throw new ArgumentOutOfRangeException("t должен лежать в диапазоне от 0 до 1 включительно");
+            double t0 = 1 - t;
+            return Math.Pow(t0, 2) * P + 2 * t0 * t * P1 + Math.Pow(t, 2) * P2;
+        }
+        void LaneBezier(Lane lane)
+        {
+            double step = 1d / (lane.arEnd - lane.arStart + 1);
+            double t = 0;
+            for (int i = lane.arStart; i < lane.arEnd + 1; i++)
+            {
+                float x = (float)BezierMy(lane.start.X, lane.middl.X, lane.end.X, t);
+                float y = (float)BezierMy(lane.start.Y, lane.middl.Y, lane.end.Y, t);
+                float z = 0;
+                particles[i].EndPosition = new Vector3(x, y, z);
+                particles[i].isMoving = true;
+                t += step;
+            }
+        }
         private void DrawString()
         {
             //Пишем на экране текст.
@@ -172,20 +290,20 @@ namespace MonoGame3DKezumieParticles
         private void CameraMove(GameTime gameTime)
         {
             //Скорость поворота расчитываемая в зависимости от времени.
-            float r =(float)( 0.1 * gameTime.ElapsedGameTime.TotalMilliseconds);
+            float r = (float)(0.1 * gameTime.ElapsedGameTime.TotalMilliseconds);
             //Скорость поворота в радианах.
             float pi = MathHelper.ToRadians(r);
             mouse = Mouse.GetState();
             //Врашаем камеру вокруг нулевых кордианат
-            if (Keyboard.GetState().IsKeyDown(Keys.Left)) rotashion *= Matrix.CreateRotationY(-1 *pi);
+            if (Keyboard.GetState().IsKeyDown(Keys.Left)) rotashion *= Matrix.CreateRotationY(-1 * pi);
             if (Keyboard.GetState().IsKeyDown(Keys.Right)) rotashion *= Matrix.CreateRotationY(pi);
             if (Keyboard.GetState().IsKeyDown(Keys.Up)) rotashion *= Matrix.CreateRotationX(-1 * pi);
             if (Keyboard.GetState().IsKeyDown(Keys.Down)) rotashion *= Matrix.CreateRotationX(pi);
             if (Keyboard.GetState().IsKeyDown(Keys.A)) rotashion *= Matrix.CreateRotationZ(-1 * pi);
             if (Keyboard.GetState().IsKeyDown(Keys.D)) rotashion *= Matrix.CreateRotationZ(pi);
             //Изменяем дистанцию камеры колесиком мыши
-            if (mouse.ScrollWheelValue < lastMouseState.ScrollWheelValue) cameraDistance -= 4*r;
-            if (mouse.ScrollWheelValue > lastMouseState.ScrollWheelValue) cameraDistance += 4*r;
+            if (mouse.ScrollWheelValue < lastMouseState.ScrollWheelValue) cameraDistance -= 4 * r;
+            if (mouse.ScrollWheelValue > lastMouseState.ScrollWheelValue) cameraDistance += 4 * r;
             //Изменяем дистанцию камеры клавиатурой
             if (Keyboard.GetState().IsKeyDown(Keys.S)) cameraDistance += r;
             if (Keyboard.GetState().IsKeyDown(Keys.W)) cameraDistance -= r;
@@ -220,7 +338,7 @@ namespace MonoGame3DKezumieParticles
         }
         bool Move(GameTime gameTime)
         {
-            int j=0;
+            int j = 0;
             for (int i = 0; i < particles.Length; i++)
             {
                 if (particles[i].isMoving)
@@ -240,7 +358,16 @@ namespace MonoGame3DKezumieParticles
             return false;
 
         }
-        #endregion
+        #endregion       
+    }
+
+    struct Lane
+    {
+        public Vector2 start;
+        public Vector2 end;
+        public Vector2 middl;
+        public int arStart;
+        public int arEnd;
     }
 }
 
