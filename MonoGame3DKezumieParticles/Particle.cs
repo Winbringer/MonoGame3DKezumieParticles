@@ -79,6 +79,5 @@ namespace MonoGame3DKezumieParticles
             Vertex[2].Position = new Vector3(X, Y, Z);
             Vertex[3].Position = new Vector3(X, Y, Z);
         }
-
     }
 }

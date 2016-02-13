@@ -24,7 +24,19 @@ namespace MonoGame3DKezumieParticles
         Texture2D texture;
         Vector2 Size;
         bool isMoving;
+        Matrix rotashion = Matrix.Identity;
+        Matrix translathion = Matrix.Identity;
+        MouseState mouse;
+        MouseState lastMouseState;
+        float cameraDistance;
+        Object o = new Object();
+        string s = "";
+        double t = 0;
+        double f = 0;
+        int k = 0;
+        int i = 0;        
         #endregion
+
         public Game1()
         {
             particles = new Particle[150000];
@@ -57,14 +69,14 @@ namespace MonoGame3DKezumieParticles
             graphics.GraphicsDevice.Flush();
             vertexBuffer = new DynamicVertexBuffer(graphics.GraphicsDevice, typeof(VertexPositionNormalTexture), vertex.Length, BufferUsage.WriteOnly);
             indexBuffer = new IndexBuffer(graphics.GraphicsDevice, typeof(int), indices.Length, BufferUsage.WriteOnly);
-
+            //Создаем вершины для наших частиц.
             CreateVertex();
             //Переносим данные в буффер для видеокарты.
             indexBuffer.SetData(indices);
             vertexBuffer.SetData(vertex);
             //Вызываем иниталайз для базового класса и всех компоненетов, если они у нас есть.
             base.Initialize();
-        }    
+        }
 
         protected override void LoadContent()
         {
@@ -86,20 +98,41 @@ namespace MonoGame3DKezumieParticles
         #endregion
 
         #region Обновление данных и отображение их на экран
-
+       
         protected override void Update(GameTime gameTime)
         {
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
+            double time = gameTime.ElapsedGameTime.TotalMilliseconds;
+            //Цикл для заполнения данным массива вершин
+            CircleMove();
             if (Keyboard.GetState().IsKeyDown(Keys.Space)) { Ju(); Li(); Ya(); Heart(); isMoving = true; }
             if (isMoving) isMoving = Move(gameTime);
             CameraMove(gameTime);
             base.Update(gameTime);
-        }     
+        }
 
-        string s = "";
-        double t = 0;
-        double f = 0;
+        private void CircleMove()
+        {
+            ++i;
+            ++k;
+            if (i > 360) i = 0;
+            if (k > 180) k=0;  
+            for (int j = 135000; j < 135500; j++)
+            {
+                Random rnd = new Random(i);
+                //Вычисляем позицию частицы в трехмерном пространстве
+                double R = 200;
+                float sin = k;
+                float cos = i;
+                float x = (float)(R * Math.Sin(MathHelper.ToRadians(sin)) * Math.Cos(MathHelper.ToRadians(cos)));
+                float y = (float)(R * Math.Sin(MathHelper.ToRadians(sin)) * Math.Sin(MathHelper.ToRadians(cos)));
+                float z = (float)(R * Math.Cos(MathHelper.ToRadians(sin)));
+                //Меняем конечную позицию частицы.
+                particles[j].Position = new Vector3(x, y, z);
+            }
+        }
+
         protected override void Draw(GameTime gameTime)
         {
             ++f;
@@ -125,6 +158,7 @@ namespace MonoGame3DKezumieParticles
             DrawString();
             base.Draw(gameTime);
         }
+
         #endregion
 
         #region Вспомогательные методы
@@ -247,7 +281,7 @@ namespace MonoGame3DKezumieParticles
                 float y = (float)(R * Math.Sin(MathHelper.ToRadians(sin)) * Math.Sin(MathHelper.ToRadians(cos)));
                 float z = (float)(R * Math.Cos(MathHelper.ToRadians(sin)));
                 //Создаем частицу с начальными данными
-                particles[i] = new Particle(2, new Vector3(x, y, z));                
+                particles[i] = new Particle(2, new Vector3(x, y, z));
                 //Переносим данные о точках частицы в массив вершин.
                 vertex[i * 4] = particles[i].Vertex[0];
                 vertex[i * 4 + 1] = particles[i].Vertex[1];
@@ -315,13 +349,7 @@ namespace MonoGame3DKezumieParticles
                 new Vector2(5, 5), Color.Red);
             spriteBatch.End();
             graphics.GraphicsDevice.DepthStencilState = DepthStencilState.Default;
-        }
-        
-        Matrix rotashion = Matrix.Identity;
-        Matrix translathion = Matrix.Identity;
-        MouseState mouse;
-        MouseState lastMouseState;
-        float cameraDistance;
+        }       
         /// <summary>
         /// Метод для передвижения времени.
         /// </summary>
@@ -353,8 +381,7 @@ namespace MonoGame3DKezumieParticles
             viewMatrix = rotashion * Matrix.CreateLookAt(new Vector3(0, 0, cameraDistance), Vector3.Zero, Vector3.Up);
             //Сохраняем текушее состояние мыши
             lastMouseState = mouse;
-        }
-        Object o = new Object();
+        }       
         /// <summary>
         /// Асинхронный метод для двежения частиц.
         /// </summary>
@@ -394,30 +421,48 @@ namespace MonoGame3DKezumieParticles
             {
                 if (particles[i].isMoving)
                 {
-                    if (particles[i].isMoving)
-                    {
-                        ++j;
-                        particles[i].Move(time);
-                        vertex[i * 4] = particles[i].Vertex[0];
-                        vertex[i * 4 + 1] = particles[i].Vertex[1];
-                        vertex[i * 4 + 2] = particles[i].Vertex[2];
-                        vertex[i * 4 + 3] = particles[i].Vertex[3];
-                    }
+                    ++j;
+                    particles[i].Move(time);
+                    vertex[i * 4] = particles[i].Vertex[0];
+                    vertex[i * 4 + 1] = particles[i].Vertex[1];
+                    vertex[i * 4 + 2] = particles[i].Vertex[2];
+                    vertex[i * 4 + 3] = particles[i].Vertex[3];
                 }
             }
             if (j > 50) return true;
             return false;
 
         }
-        #endregion       
+        /// <summary>
+        /// Меняет позицию частицы чиклически по поверхносте сферы.
+        /// </summary>
+      
+        #endregion
     }
-
+    /// <summary>
+    /// Структура хранящая данные для рисования кривой линии.
+    /// </summary>
     struct Lane
     {
+        /// <summary>
+        /// Позиция начальной точки кривой (x,y)
+        /// </summary>
         public Vector2 start;
+        /// <summary>
+        /// Позиция вершины кривой.
+        /// </summary>
         public Vector2 end;
+        /// <summary>
+        /// Позиция конечной вершины кривой.
+        /// </summary>
         public Vector2 middl;
+        /// <summary>
+        /// Индекс первой частицы в массиве частиц с которой начнеться рисование линии.
+        /// </summary>
         public int arStart;
+        /// <summary>
+        /// Индекс последней частицы в массиве мачастиц.
+        /// </summary>
         public int arEnd;
     }
 }
