@@ -7,7 +7,7 @@ namespace MonoGame3DKezumieParticles
     class Particle
     {
         #region Поля        
-        float Speed;        
+        float Speed;
         Vector3 Velocity;
         public Vector3 Position;
         public bool isMoving { get; set; }
@@ -28,16 +28,16 @@ namespace MonoGame3DKezumieParticles
         {
             Position = StartPosition;
             isMoving = true;
-            Vertex = new VertexPositionNormalTexture[4];       
+            Vertex = new VertexPositionNormalTexture[4];
 
             float X = StartPosition.X;
             float Y = StartPosition.Y;
             float Z = StartPosition.Z;
 
-            Vertex[0] = new VertexPositionNormalTexture(new Vector3(X, Y, Z),new Vector3(-1,1,1), new Vector2(0, 0));
-            Vertex[1] = new VertexPositionNormalTexture(new Vector3(X, Y, Z),new Vector3(1,1,1), new Vector2(1, 0));
-            Vertex[2] = new VertexPositionNormalTexture(new Vector3(X, Y, Z),new Vector3(1,-1,1), new Vector2(1, 1));
-            Vertex[3] = new VertexPositionNormalTexture(new Vector3(X, Y, Z),new Vector3(-1,-1,1), new Vector2(0, 1));
+            Vertex[0] = new VertexPositionNormalTexture(new Vector3(X, Y, Z), new Vector3(-1, 1, 1), new Vector2(0, 0));
+            Vertex[1] = new VertexPositionNormalTexture(new Vector3(X, Y, Z), new Vector3(1, 1, 1), new Vector2(1, 0));
+            Vertex[2] = new VertexPositionNormalTexture(new Vector3(X, Y, Z), new Vector3(1, -1, 1), new Vector2(1, 1));
+            Vertex[3] = new VertexPositionNormalTexture(new Vector3(X, Y, Z), new Vector3(-1, -1, 1), new Vector2(0, 1));
         }
 
         public void Move(GameTime time)
@@ -57,9 +57,9 @@ namespace MonoGame3DKezumieParticles
             Position.Y += (float)((Velocity.Y * mult));
             Position.Z += (float)((Velocity.Z * mult));
 
-            if (Math.Abs((EndPosition.X - Position.X)) < Math.Abs(0.1)) Position.X = EndPosition.X;
-            if (Math.Abs((EndPosition.Y - Position.Y)) < Math.Abs(0.1)) Position.Y = EndPosition.Y;
-            if (Math.Abs((EndPosition.Z - Position.Z)) < Math.Abs(0.1)) Position.Z = EndPosition.Z;
+            if (MathHelper.Distance(EndPosition.X, Position.X) < 0.01) Position.X = EndPosition.X;
+            if (MathHelper.Distance(EndPosition.Y, Position.Y) < 0.01) Position.Y = EndPosition.Y;
+            if (MathHelper.Distance(EndPosition.Z, Position.Z) < 0.01) Position.Z = EndPosition.Z;
 
             float X = Position.X;
             float Y = Position.Y;

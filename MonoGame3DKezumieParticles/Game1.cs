@@ -4,7 +4,7 @@ using Microsoft.Xna.Framework.Input;
 using System;
 using System.IO;
 using System.Threading.Tasks;
-//Сделать расчит кривыз Безьера
+
 namespace MonoGame3DKezumieParticles
 {
     public class Game1 : Game
@@ -22,11 +22,11 @@ namespace MonoGame3DKezumieParticles
         IndexBuffer indexBuffer;
         private int[] indices;
         Texture2D texture;
-        Vector2 Size;        
+        Vector2 Size;
         #endregion
-
+        //Сделать расчит кривыз Безьера
         public Game1()
-        {
+        {           
             particles = new Particle[100000];
             Size = new Vector2(1f, 1f);
             cameraDistance = 200;
@@ -45,6 +45,7 @@ namespace MonoGame3DKezumieParticles
                 (float)graphics.PreferredBackBufferHeight, 1f, 550);
         }
 
+        #region Инициализация и загрузка начальных данных
         protected override void Initialize()
         {
             //Создаем буффер индексов и вершин
@@ -63,7 +64,7 @@ namespace MonoGame3DKezumieParticles
                 float y = (float)(R * Math.Sin(MathHelper.ToRadians(sin)) * Math.Sin(MathHelper.ToRadians(cos)));
                 float z = (float)(R * Math.Cos(MathHelper.ToRadians(sin)));
                 //Создаем частицу с начальными данными
-                particles[i] = new Particle(3, new Vector3(x, y, z));
+                particles[i] = new Particle(3, new Vector3(0, 0, 0)) { EndPosition = new Vector3(x, y, z) };
                 particles[i].Init();                
                 //Переносим данные о точках частицы в массив вершин.
                 vertex[i * 4] = particles[i].Vertex[0];
@@ -101,6 +102,9 @@ namespace MonoGame3DKezumieParticles
         {
             texture.Dispose();
         }
+        #endregion
+
+        #region Обновление данных и отображение их на экран
         double time;
         protected override void Update(GameTime gameTime)
         {           
@@ -144,7 +148,9 @@ namespace MonoGame3DKezumieParticles
             graphics.GraphicsDevice.DepthStencilState = DepthStencilState.Default;
             base.Draw(gameTime);
         }
+        #endregion
 
+        #region Вспомогательные методы
         /// <summary>
         /// Метод для передвежения камеры
         /// </summary>
@@ -216,6 +222,7 @@ namespace MonoGame3DKezumieParticles
             }
 
         }
+        #endregion
     }
 }
 
