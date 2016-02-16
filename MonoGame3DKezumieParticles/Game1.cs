@@ -58,7 +58,7 @@ namespace MonoGame3DKezumieParticles
             viewMatrix = Matrix.CreateLookAt(new Vector3(0, 0, cameraDistance), Vector3.Zero, Vector3.Up);
             projectionMatrix = Matrix.CreatePerspectiveFieldOfView(MathHelper.PiOver4,
                  graphics.PreferredBackBufferWidth /
-                (float)graphics.PreferredBackBufferHeight, 1f, 700);
+                (float)graphics.PreferredBackBufferHeight, 0.1f, 700);
         }
 
         #region Инициализация и загрузка начальных данных
